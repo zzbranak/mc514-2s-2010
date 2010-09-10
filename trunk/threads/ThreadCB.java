@@ -78,6 +78,8 @@ public class ThreadCB extends IflThreadCB
 					thread.setStatus(ThreadReady);
 					readyThreadQueue.append(thread);
 					return thread;
+				} else {
+					return null;
 				}
     }
 
