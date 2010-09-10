@@ -18,6 +18,9 @@ import osp.Resources.*;
 */
 public class ThreadCB extends IflThreadCB 
 {
+
+		private GenericList threadReadyQueue;
+
     /**
        The thread constructor. Must call 
 
@@ -30,6 +33,7 @@ public class ThreadCB extends IflThreadCB
     public ThreadCB()
     {
         super();
+				threadReadyQueue = new GenericList();
 
     }
 
@@ -64,15 +68,17 @@ public class ThreadCB extends IflThreadCB
     */
     static public ThreadCB do_create(TaskCB task)
     {
+				/* Verifica se ainda eh possivel adicionar Threads a Task. */
 				if(task.getThreadCount() < task.MaxThreadsPerTask) {
         	ThreadCB thread = new ThreadCB();
 
 					thread.setTask(task);
-					if(!task.addThread(thread)) {
-						return NULL;
+					if(task.addThread(thread) == FAILURE) {
+						return null;
 					}
+					thread.setStatus(ThreadReady);
+					return thread;
 				}
-
     }
 
     /** 
