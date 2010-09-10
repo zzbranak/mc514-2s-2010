@@ -71,12 +71,12 @@ public class ThreadCB extends IflThreadCB
 				if(task.getThreadCount() < task.MaxThreadsPerTask) {
 
         	ThreadCB thread = new ThreadCB();
-					thread.setTask(task);
 
 					if(task.addThread(thread) == FAILURE) {
 						return null;
 					}
-
+					
+					thread.setTask(task);	
 					thread.setStatus(ThreadReady);
 					readyThreadQueue.append(thread);
 					return thread;
