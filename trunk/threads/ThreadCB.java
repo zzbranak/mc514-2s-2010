@@ -29,7 +29,7 @@ public class ThreadCB extends IflThreadCB
     */
     public ThreadCB()
     {
-        // your code goes here
+        super();
 
     }
 
@@ -64,7 +64,14 @@ public class ThreadCB extends IflThreadCB
     */
     static public ThreadCB do_create(TaskCB task)
     {
-        // your code goes here
+				if(task.getThreadCount() < task.MaxThreadsPerTask) {
+        	ThreadCB thread = new ThreadCB();
+
+					thread.setTask(task);
+					if(!task.addThread(thread)) {
+						return NULL;
+					}
+				}
 
     }
 
