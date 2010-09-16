@@ -18,6 +18,7 @@ import osp.Resources.*;
 */
 public class ThreadCB extends IflThreadCB 
 {
+    private static GenericList ReadyQueue;
 
     /**
        The thread constructor. Must call 
@@ -31,6 +32,7 @@ public class ThreadCB extends IflThreadCB
     public ThreadCB()
     {
         super();
+        ReadyQueue = new GenericList();
 
     }
 
