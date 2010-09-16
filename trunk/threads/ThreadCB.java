@@ -19,8 +19,6 @@ import osp.Resources.*;
 public class ThreadCB extends IflThreadCB 
 {
 
-		private GenericList readyThreadQueue;
-
     /**
        The thread constructor. Must call 
 
@@ -33,7 +31,6 @@ public class ThreadCB extends IflThreadCB
     public ThreadCB()
     {
         super();
-				readyThreadQueue = new GenericList();
 
     }
 
@@ -45,7 +42,6 @@ public class ThreadCB extends IflThreadCB
     */
     public static void init()
     {
-        // your code goes here
 
     }
 
@@ -68,22 +64,21 @@ public class ThreadCB extends IflThreadCB
     */
     static public ThreadCB do_create(TaskCB task)
     {
-				if(task.getThreadCount() < task.MaxThreadsPerTask) {
+	    if(task.getThreadCount() < IflThreadCB.MaxThreadsPerTask) {
+	    	
+            ThreadCB thread = new ThreadCB();
 
-        	ThreadCB thread = new ThreadCB();
-
-					if(task.addThread(thread) == FAILURE) {
-						return null;
-					}
+			if(task.addThread(thread) == FAILURE) {
+			    return null;
+			}
 					
-					thread.setTask(task);	
-					thread.setStatus(ThreadReady);
-					readyThreadQueue.append(thread);
-					return thread;
+			thread.setTask(task);	
+			thread.setStatus(ThreadReady);
+			return thread;
 
-				} else {
-					return null;
-				}
+			} else {
+			      return null;
+			}
     }
 
     /** 
@@ -157,8 +152,8 @@ public class ThreadCB extends IflThreadCB
     */
     public static int do_dispatch()
     {
-        // your code goes here
-
+    	
+        return 0;
     }
 
     /**
