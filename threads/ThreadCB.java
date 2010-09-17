@@ -152,7 +152,7 @@ public class ThreadCB extends IflThreadCB
     */
     public void do_resume()
     {
-  
+ 
 			if(getStatus() >= ThreadWaiting) {
 				/*this.setStatus(ThreadWaiting-1);*/
 				if(getStatus() == ThreadWaiting) {
