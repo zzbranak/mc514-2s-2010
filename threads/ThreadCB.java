@@ -131,13 +131,14 @@ public class ThreadCB extends IflThreadCB
         if(getStatus() == ThreadRunning) {
         	setStatus(ThreadWaiting);
         } else {
-        	setStatus(ThreadWaiting+1);
+        	setStatus(getStatus()+1);
         }
         
         /* Remove thread da lista de Ready e insere na lista de Waiting */
         ThreadCB.ReadyQueue.remove(this);
         WaitingQueue = event.getThreadList();
 				WaitingQueue.append(this);
+				dispatch();
 
     }
 
