@@ -201,19 +201,21 @@ public class ThreadCB extends IflThreadCB
 
 					/* Seta o status ThreadReady na thread atual */
 					currentPage = MMU.getPTBR();
-					currentTask = currentPage.getTask();
-					currentThread = currentTask.getCurrentThread();
-					currentThread.setStatus(ThreadReady);
-					MMU.setPTBR(null);
-					currentTask.setCurrentThread(null);
+					if(currentPage != null) {
+						currentTask = currentPage.getTask();
+						currentThread = currentTask.getCurrentThread();
+						currentThread.setStatus(ThreadReady);
+						MMU.setPTBR(null);
+						currentTask.setCurrentThread(null);
+					}
 
 					/* Coloca a nova thread para rodar, utilizando
 				 	* algoritmo First In, First Served  */
 					newThread.setStatus(ThreadRunning);
 					newTask = newThread.getTask();
-					newTask.setCurrentThread(newThread);
 					newPage = newTask.getPageTable();
 					MMU.setPTBR(newPage);
+					newTask.setCurrentThread(newThread);
 
 					return SUCCESS;
 
