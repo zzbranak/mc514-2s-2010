@@ -131,9 +131,7 @@ public class ThreadCB extends IflThreadCB
         if(status == ThreadRunning) {
         	this.setStatus(ThreadWaiting);
         } else {
-        	if(status == ThreadWaiting) {
-        		this.setStatus(ThreadWaiting+1);
-        	}
+        	this.setStatus(ThreadWaiting+1);
         }
         
         /* Remove thread da lista de Ready e insere na lista de Waiting */
