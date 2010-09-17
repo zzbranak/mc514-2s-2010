@@ -19,7 +19,6 @@ import osp.Resources.*;
 public class ThreadCB extends IflThreadCB 
 {
     private static GenericList ReadyQueue;
-    private static GenericList WaitingQueue;
 
     /**
        The thread constructor. Must call 
@@ -34,7 +33,6 @@ public class ThreadCB extends IflThreadCB
     {
         super();
         ReadyQueue = new GenericList();
-        WaitingQueue = new GenericList();
 
     }
 
@@ -127,8 +125,9 @@ public class ThreadCB extends IflThreadCB
     {
      
         int status = this.getStatus();
+				GenericList WaitingQueue;
         
-    	/* Verifica status da thread */
+    		/* Verifica status da thread */
         if(status == ThreadRunning) {
         	this.setStatus(ThreadWaiting);
         } else {
@@ -139,7 +138,8 @@ public class ThreadCB extends IflThreadCB
         
         /* Remove thread da lista de Ready e insere na lista de Waiting */
         ThreadCB.ReadyQueue.remove(this);
-        ThreadCB.WaitingQueue.append(this);
+        WaitingQueue = event.getThreadList();
+				WaitingQueue.append(this);
 
     }
 
