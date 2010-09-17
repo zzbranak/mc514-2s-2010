@@ -186,7 +186,42 @@ public class ThreadCB extends IflThreadCB
     	stat = this.getStatus();
         MyOut.print("osp.Threads.ThreadsCB", ">>>>"+ThreadRunning);    	
         MyOut.print("osp.Threads.ThreadsCB", "===="+stat);*/
-        return 0;
+
+				TaskCB    currentTask;
+				ThreadCB  currentThread;
+				PageTable currentPage;
+				TaskCB 		newTask;
+				ThreadCB 	newThread;
+				PageTable newPage;
+
+				/* Verifica se existe uma thread na ReadyQueue 
+				 * e faz a troca de contexto */
+				newThread = (ThreadCB)ThreadCB.ReadyQueue.removeHead();
+				if(newThread != null) {
+
+					/* Seta o status ThreadReady na thread atual */
+					currentPage = MMU.getPTBR();
+					currentTask = currentPage.getTask();
+					currentThread = currentTask.getCurrentThread();
+					currentThread.setStatus(ThreadReady);
+					MMU.setPTBR(null);
+					currentTask.setCurrentThread(null);
+
+					/* Coloca a nova thread para rodar, utilizando
+				 	* algoritmo First In, First Served  */
+					newThread.setStatus(ThreadRunning);
+					newTask = newThread.getTask();
+					newTask.setCurrentThread(newThread);
+					newPage = newTask.getPageTable();
+					MMU.setPTBR(newPage);
+
+					return SUCCESS;
+
+				} else {
+
+					return FAILURE;
+
+				}
     }
 
     /**
