@@ -124,11 +124,11 @@ public class ThreadCB extends IflThreadCB
     public void do_suspend(Event event)
     {
      
-        int status = this.getStatus();
+        /*int status = this.getStatus();*/
 				GenericList WaitingQueue;
         
     		/* Verifica status da thread */
-        if(status == ThreadRunning) {
+        if(this.getStatus() == ThreadRunning) {
         	this.setStatus(ThreadWaiting);
         } else {
         	this.setStatus(ThreadWaiting+1);
@@ -153,11 +153,16 @@ public class ThreadCB extends IflThreadCB
     public void do_resume()
     {
   
-			setStatus(ThreadWaiting-1);
-			if(getStatus() == ThreadReady) {
-				ThreadCB.ReadyQueue.append(this);
-    	}
-			dispatch();
+			if(this.getStatus() >= ThreadWaiting) {
+				/*this.setStatus(ThreadWaiting-1);*/
+				if(getStatus() == ThreadWaiting) {
+					this.setStatus(ThreadReady);
+					ThreadCB.ReadyQueue.append(this);
+    		} else {
+					this.setStatus(this.getStatus()-1);
+				}
+					dispatch();
+			}
 
 		}
 
