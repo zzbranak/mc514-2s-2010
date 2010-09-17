@@ -154,9 +154,14 @@ public class ThreadCB extends IflThreadCB
     */
     public void do_resume()
     {
-        
+  
+			setStatus(ThreadWaiting-1);
+			if(getStatus() == ThreadReady) {
+				ThreadCB.ReadyQueue.append(this);
+    	}
+			dispatch();
 
-    }
+		}
 
     /** 
         Selects a thread from the run queue and dispatches it. 
@@ -173,11 +178,11 @@ public class ThreadCB extends IflThreadCB
     */
     public static int do_dispatch()
     {
-    	int stat;
+    	/*int stat;
     	
     	stat = this.getStatus();
         MyOut.print("osp.Threads.ThreadsCB", ">>>>"+ThreadRunning);    	
-        MyOut.print("osp.Threads.ThreadsCB", "===="+stat);
+        MyOut.print("osp.Threads.ThreadsCB", "===="+stat);*/
         return 0;
     }
 
