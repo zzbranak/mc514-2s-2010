@@ -32,7 +32,6 @@ public class ThreadCB extends IflThreadCB
     public ThreadCB()
     {
         super();
-        ReadyQueue = new GenericList();
 
     }
 
@@ -44,7 +43,7 @@ public class ThreadCB extends IflThreadCB
     */
     public static void init()
     {
-
+        ReadyQueue = new GenericList();
     }
 
     /** 
@@ -66,6 +65,7 @@ public class ThreadCB extends IflThreadCB
     */
     static public ThreadCB do_create(TaskCB task)
     {
+		MyOut.print("osp.Threads.ThreadsCB", ">>>>>>>>>>>>>>>> CREATE"); 
 	    if(task.getThreadCount() < IflThreadCB.MaxThreadsPerTask) {
 	    	
             ThreadCB thread = new ThreadCB();
@@ -101,7 +101,7 @@ public class ThreadCB extends IflThreadCB
     */
     public void do_kill()
     {
-        // your code goes here
+        dispatch();
 
     }
 
@@ -125,20 +125,20 @@ public class ThreadCB extends IflThreadCB
     {
      
         /*int status = this.getStatus();*/
-				GenericList WaitingQueue;
         
     		/* Verifica status da thread */
-        if(getStatus() == ThreadRunning) {
-        	setStatus(ThreadWaiting);
+        if(this.getStatus() == ThreadRunning) {
+        	this.setStatus(ThreadWaiting);
+        	this.getTask().setCurrentThread(null);
+        	MMU.setPTBR(null);
         } else {
-        	setStatus(getStatus()+1);
+        	this.setStatus(this.getStatus()+1);
         }
         
         /* Remove thread da lista de Ready e insere na lista de Waiting */
-        ThreadCB.ReadyQueue.remove(this);
-        WaitingQueue = event.getThreadList();
-				WaitingQueue.append(this);
-				dispatch();
+        	
+        event.getThreadList().append(this);
+		dispatch();
 
     }
 
@@ -152,17 +152,22 @@ public class ThreadCB extends IflThreadCB
 	@OSPProject Threads
     */
     public void do_resume()
-    {
- 
+    {    
+    	
+    	
 			if(getStatus() >= ThreadWaiting) {
 				/*this.setStatus(ThreadWaiting-1);*/
-				if(getStatus() == ThreadWaiting) {
-					setStatus(ThreadReady);
+				if(this.getStatus() == ThreadWaiting) {
+					this.setStatus(ThreadReady);
 					ThreadCB.ReadyQueue.append(this);
-    		} else {
-					setStatus(getStatus()-1);
+    		    }else {
+					this.setStatus(this.getStatus()-1);
 				}
 					dispatch();
+			}else{
+				MyOut.print("osp.Threads.ThreadsCB", "Tentativa de resumir uma Thread" +
+						    " que não estava esperando"); 
+				return;
 			}
 
 		}
@@ -194,37 +199,36 @@ public class ThreadCB extends IflThreadCB
 				TaskCB 		newTask;
 				ThreadCB 	newThread;
 				PageTable newPage;
-
+				MyOut.print("osp.Threads.ThreadsCB", ">>>>>>>>>>>>>>>> DISPATCH"); 
 				/* Verifica se existe uma thread na ReadyQueue 
 				 * e faz a troca de contexto */
-				newThread = (ThreadCB)ThreadCB.ReadyQueue.removeHead();
-				if(newThread != null) {
 
-					/* Seta o status ThreadReady na thread atual */
-					currentPage = MMU.getPTBR();
-					if(currentPage != null) {
-						currentTask = currentPage.getTask();
-						currentThread = currentTask.getCurrentThread();
-						currentThread.setStatus(ThreadReady);
-						MMU.setPTBR(null);
-						currentTask.setCurrentThread(null);
+				/* Seta o status ThreadReady na thread atual */
+				currentPage = MMU.getPTBR();
+				
+				if(currentPage != null) {
+					currentTask = currentPage.getTask();
+					currentThread = currentTask.getCurrentThread();
+					if(currentThread.getStatus() == ThreadRunning){
+					    currentThread.setStatus(ThreadReady);
+					    ThreadCB.ReadyQueue.append(currentThread);
 					}
-
-					/* Coloca a nova thread para rodar, utilizando
-				 	* algoritmo First In, First Served  */
-					newThread.setStatus(ThreadRunning);
-					newTask = newThread.getTask();
-					newPage = newTask.getPageTable();
-					MMU.setPTBR(newPage);
-					newTask.setCurrentThread(newThread);
-
-					return SUCCESS;
-
-				} else {
-
-					return FAILURE;
-
+			    MMU.setPTBR(null);
+				currentTask.setCurrentThread(null);
 				}
+
+				newThread = (ThreadCB)ThreadCB.ReadyQueue.removeHead();
+				if(newThread == null) return FAILURE;
+
+				/* Coloca a nova thread para rodar, utilizando
+			 	* algoritmo First In, First Served  */
+				newThread.setStatus(ThreadRunning);
+				newTask = newThread.getTask();
+				newPage = newTask.getPageTable();
+				MMU.setPTBR(newPage);
+				newTask.setCurrentThread(newThread);
+				return SUCCESS;
+
     }
 
     /**
