@@ -24,7 +24,7 @@ public class TimerInterruptHandler extends IflTimerInterruptHandler
     	tLeft = HTimer.get();
     	
     	if(tLeft == 0)
-            HTimer.set(100);
+            HTimer.set(50);
     	
         ThreadCB.dispatch();
     }
