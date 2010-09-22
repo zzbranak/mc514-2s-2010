@@ -65,7 +65,6 @@ public class ThreadCB extends IflThreadCB
     */
     static public ThreadCB do_create(TaskCB task)
     {
-		MyOut.print("osp.Threads.ThreadsCB", ">>>>>>>>>>>>>>>> CREATE"); 
 	    if(task.getThreadCount() < IflThreadCB.MaxThreadsPerTask) {
 	    	
             ThreadCB thread = new ThreadCB();
@@ -101,7 +100,34 @@ public class ThreadCB extends IflThreadCB
     */
     public void do_kill()
     {
+    	TaskCB OwnerTask = this.getTask();
+    	int nDevices = Device.getTableSize();
+    	int i;
+    	Device cDev;
+    	
+    	if(this.getStatus() == ThreadReady){
+			ThreadCB.ReadyQueue.remove(this);
+			this.setStatus(ThreadKill);
+    	}
+    	if(this.getStatus() == ThreadRunning){
+        	this.getTask().setCurrentThread(null);
+        	MMU.setPTBR(null);
+			this.setStatus(ThreadKill);
+    	}
+    	if(this.getStatus() >= ThreadWaiting){
+    		for(i=0;i<nDevices;i++){
+    			cDev = Device.get(i);
+    			cDev.cancelPendingIO(this);
+    		}
+			this.setStatus(ThreadKill);
+    	}
+    	
+    	ResourceCB.giveupResources(this);    	
         dispatch();
+        OwnerTask.removeThread(this);
+        if(OwnerTask.getThreadCount() == 0){
+        	OwnerTask.kill();
+        }
 
     }
 
@@ -199,7 +225,6 @@ public class ThreadCB extends IflThreadCB
 				TaskCB 		newTask;
 				ThreadCB 	newThread;
 				PageTable newPage;
-				MyOut.print("osp.Threads.ThreadsCB", ">>>>>>>>>>>>>>>> DISPATCH"); 
 				/* Verifica se existe uma thread na ReadyQueue 
 				 * e faz a troca de contexto */
 
