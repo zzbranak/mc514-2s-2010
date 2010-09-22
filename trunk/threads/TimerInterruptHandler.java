@@ -20,7 +20,9 @@ public class TimerInterruptHandler extends IflTimerInterruptHandler
     */
     public void do_handleInterrupt()
     {
-    	long tLeft;  	
+    	//Pega o tempo do counter. Se ele for igual a zero, reseta e
+    	//despacha uma nova thread
+        long tLeft;  	
     	tLeft = HTimer.get();
     	
     	if(tLeft == 0)
