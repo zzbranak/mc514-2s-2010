@@ -99,7 +99,7 @@ public class ResourceCB extends IflResourceCB
 
         pageTable = MMU.getPTBR();
         task = pageTable.getTask();
-        thread = get
+        thread = getCurrentThread();
         
 
     }
