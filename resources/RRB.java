@@ -24,7 +24,8 @@ public class RRB extends IflRRB
     */   
     public RRB(ThreadCB thread, ResourceCB resource,int quantity)
     {
-        // your code goes here
+
+        super(thread, resource, quantity);
 
     }
 
@@ -37,7 +38,21 @@ public class RRB extends IflRRB
     */
     public void do_grant()
     {
-        // your code goes here
+        ResourceCB resourceType;
+        int available, quantity, allocated;
+        ThreadCB thread;
+
+        quantity = getQuantity();
+        allocated = getAllocated();
+        thread = getThread;
+        resourceType = ResourceCB.getResource();
+        available = resourceType.getAvailable();
+
+
+        if(available >= quantity) {
+            resourceType.setAvailable(available - quantity);
+            setAllocated(thread, allocated + quantity);
+        }
 
     }
 
