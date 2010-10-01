@@ -94,8 +94,12 @@ public class ResourceCB extends IflResourceCB
     {
         
         PageTable pageTable;
+        TaskCB task;
+        ThreadCB thread;
 
         pageTable = MMU.getPTBR();
+        task = pageTable.getTask();
+        thread = get
         
 
     }
