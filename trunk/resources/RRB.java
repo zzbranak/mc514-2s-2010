@@ -52,6 +52,8 @@ public class RRB extends IflRRB
         if(available >= quantity) {
             resourceType.setAvailable(available - quantity);
             setAllocated(thread, allocated + quantity);
+            setStatus(Granted);
+            notifyThreads();
         }
 
     }

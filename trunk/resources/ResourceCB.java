@@ -23,7 +23,8 @@ public class ResourceCB extends IflResourceCB
     */
     public ResourceCB(int qty)
     {
-        // your code goes here
+        
+        super(qty);
 
     }
 
@@ -91,7 +92,11 @@ public class ResourceCB extends IflResourceCB
     */
     public void do_release(int quantity)
     {
-        // your code goes here
+        
+        PageTable pageTable;
+
+        pageTable = MMU.getPTBR();
+        
 
     }
 
