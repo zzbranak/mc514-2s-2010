@@ -1,3 +1,16 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status: Incompleto
+* 
+* 1. Dificuldades nos métodos do_acquire e deadlock detection. Poucas especificações no livro.
+*
+* 07/10/2010
+*
+* */
+
 package osp.Resources;
 
 /**

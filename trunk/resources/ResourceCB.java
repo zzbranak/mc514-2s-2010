@@ -1,3 +1,16 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status: Incompleto
+* 
+* 1. Dificuldades nos métodos do_acquire e deadlock detection. Poucas especificações no livro.
+*
+* 07/10/2010
+*
+* */
+
 package osp.Resources;
 
 import java.util.*;
@@ -53,7 +66,27 @@ public class ResourceCB extends IflResourceCB
     */
     public RRB  do_acquire(int quantity) 
     {
-        // your code goes here
+        PageTable PTble = MMU.getPTBR();
+        TaskCB CTask = PTble.getTask();
+        ThreadCB CThread = CTask.getCurrentThread();
+        RRB rrb = new RRB(CThread, this, quantity);        
+        
+        if(ResourceCB.getDeadlockMethod() == Detection){
+        	if(quantity > this.getTotal())
+        		return null;
+            else{
+        		if(quantity > this.getAvailable()){
+        			CThread.suspend(rrb);
+        		    rrb.setStatus(Suspended);
+        		    return null;
+        		}
+        		else{
+        			rrb.grant();
+        		    return rrb;
+        		}
+            }
+        }
+        return null;
 
     }
 
@@ -66,6 +99,7 @@ public class ResourceCB extends IflResourceCB
     public static Vector do_deadlockDetection()
     {
         // your code goes here
+    	return null;
 
     }
 
@@ -93,13 +127,26 @@ public class ResourceCB extends IflResourceCB
     public void do_release(int quantity)
     {
         
+        
         PageTable pageTable;
         TaskCB task;
         ThreadCB thread;
+        ResourceCB resource;
+        int available, allocated;
 
+        /* Pega a thread que esta rodando. */
         pageTable = MMU.getPTBR();
         task = pageTable.getTask();
-        thread = getCurrentThread();
+        thread = task.getCurrentThread();
+
+        //resource = getResource();
+
+        /* Atualiza as quantidades de recursos disponiveis
+         * e alocados. */
+        allocated = getAllocated(thread);
+        available = getAvailable();
+        setAllocated(thread, allocated - quantity);
+        setAvailable(available + quantity);
         
 
     }
