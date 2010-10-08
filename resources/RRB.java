@@ -1,3 +1,16 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status: Incompleto
+* 
+* 1. Dificuldades nos métodos do_acquire e deadlock detection. Poucas especificações no livro.
+*
+* 07/10/2010
+*
+* */
+
 package osp.Resources;
 
 import java.util.*;
@@ -42,19 +55,17 @@ public class RRB extends IflRRB
         int available, quantity, allocated;
         ThreadCB thread;
 
-        quantity = getQuantity();
-        allocated = getAllocated();
-        thread = getThread;
-        resourceType = ResourceCB.getResource();
+        quantity = this.getQuantity();
+        thread = this.getThread();
+        resourceType = this.getResource();
+        allocated = resourceType.getAllocated(thread);
         available = resourceType.getAvailable();
 
 
-        if(available >= quantity) {
-            resourceType.setAvailable(available - quantity);
-            setAllocated(thread, allocated + quantity);
-            setStatus(Granted);
-            notifyThreads();
-        }
+        resourceType.setAvailable(available - quantity);
+        resourceType.setAllocated(thread, allocated + quantity);
+        this.setStatus(Granted);
+        this.notifyThreads();
 
     }
 
