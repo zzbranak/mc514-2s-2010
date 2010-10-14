@@ -27,6 +27,7 @@ import osp.Memory.*;
 */
 public class ResourceCB extends IflResourceCB
 {
+	private static GenericList RRBqueue;
     /**
        Creates a new ResourceCB instance with the given number of 
        available instances. This constructor must have super(qty) 
@@ -72,7 +73,7 @@ public class ResourceCB extends IflResourceCB
         RRB rrb = new RRB(CThread, this, quantity);        
         
         if(ResourceCB.getDeadlockMethod() == Detection){
-        	if(quantity > this.getTotal())
+        	if(quantity + this.getAllocated(CThread) > this.getTotal())
         		return null;
             else{
         		if(quantity > this.getAvailable()){
@@ -113,7 +114,19 @@ public class ResourceCB extends IflResourceCB
     */
     public static void do_giveupResources(ThreadCB thread)
     {
-        // your code goes here
+    	boolean flag=false;
+    	int i, released;
+    	ResourceCB res;
+    	GenericList wQueue;
+    	
+    	for(i=0;i<ResourceTable.getSize();i++){
+    		
+    		res = ResourceTable.getResourceCB(i);
+    		released = res.getAllocated(thread);
+    		res.setAvailable(res.getAvailable() + released);
+    		res.setAllocated(thread, 0);
+    	}
+        
 
     }
 
