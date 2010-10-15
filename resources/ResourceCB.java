@@ -50,7 +50,7 @@ public class ResourceCB extends IflResourceCB
     */
     public static void init()
     {
-        // your code goes here
+    	RRBqueue = new GenericList();
 
     }
 
@@ -79,6 +79,7 @@ public class ResourceCB extends IflResourceCB
         		if(quantity > this.getAvailable()){
         			CThread.suspend(rrb);
         		    rrb.setStatus(Suspended);
+        		    ResourceCB.RRBqueue.append(rrb);
         		    return null;
         		}
         		else{
@@ -114,10 +115,11 @@ public class ResourceCB extends IflResourceCB
     */
     public static void do_giveupResources(ThreadCB thread)
     {
+    	Enumeration e = RRBqueue.forwardIterator();
     	boolean flag=false;
-    	int i, released;
+    	int i, released, qtd;
     	ResourceCB res;
-    	GenericList wQueue;
+    	RRB rrb;
     	
     	for(i=0;i<ResourceTable.getSize();i++){
     		
@@ -125,6 +127,16 @@ public class ResourceCB extends IflResourceCB
     		released = res.getAllocated(thread);
     		res.setAvailable(res.getAvailable() + released);
     		res.setAllocated(thread, 0);
+    		
+    		while(e.hasMoreElements() && flag==false) {
+    			rrb = e.nextElement();
+    			if(res.getAvailable() >= rrb.getQuantity()) {
+    				RRBqueue.remove(rrb);
+    				rrb.grant();
+    				flag = true;
+    			}
+    		}
+    		
     	}
         
 
