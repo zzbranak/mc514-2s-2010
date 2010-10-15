@@ -129,8 +129,8 @@ public class ResourceCB extends IflResourceCB
     		res.setAllocated(thread, 0);
     		
     		while(e.hasMoreElements() && flag==false) {
-    			rrb = e.nextElement();
-    			if(res.getAvailable() >= rrb.getQuantity()) {
+    			rrb = (RRB)e.nextElement();
+    			if(res == rrb.getResource() && res.getAvailable() > rrb.getQuantity()) {
     				RRBqueue.remove(rrb);
     				rrb.grant();
     				flag = true;
@@ -152,7 +152,9 @@ public class ResourceCB extends IflResourceCB
     public void do_release(int quantity)
     {
         
-        
+    	Enumeration e = RRBqueue.forwardIterator();
+    	boolean flag=false;
+    	RRB rrb;
         PageTable pageTable;
         TaskCB task;
         ThreadCB thread;
@@ -164,15 +166,21 @@ public class ResourceCB extends IflResourceCB
         task = pageTable.getTask();
         thread = task.getCurrentThread();
 
-        //resource = getResource();
-
         /* Atualiza as quantidades de recursos disponiveis
          * e alocados. */
-        allocated = getAllocated(thread);
-        available = getAvailable();
+        allocated = this.getAllocated(thread);
+        available = this.getAvailable();
         setAllocated(thread, allocated - quantity);
         setAvailable(available + quantity);
         
+		while(e.hasMoreElements() && flag==false) {
+			rrb = (RRB)e.nextElement();
+			if(this == rrb.getResource() && this.getAvailable() > rrb.getQuantity()) {
+				RRBqueue.remove(rrb);
+				rrb.grant();
+				flag = true;
+			}
+		}
 
     }
 
