@@ -130,7 +130,7 @@ public class ResourceCB extends IflResourceCB
     		
     		while(e.hasMoreElements() && flag==false) {
     			rrb = (RRB)e.nextElement();
-    			if(res == rrb.getResource() && res.getAvailable() > rrb.getQuantity()) {
+    			if(res == rrb.getResource() && res.getAvailable() >= rrb.getQuantity()) {
     				RRBqueue.remove(rrb);
     				rrb.grant();
     				flag = true;
@@ -175,7 +175,7 @@ public class ResourceCB extends IflResourceCB
         
 		while(e.hasMoreElements() && flag==false) {
 			rrb = (RRB)e.nextElement();
-			if(this == rrb.getResource() && this.getAvailable() > rrb.getQuantity()) {
+			if(this == rrb.getResource() && this.getAvailable() >= rrb.getQuantity()) {
 				RRBqueue.remove(rrb);
 				rrb.grant();
 				flag = true;
