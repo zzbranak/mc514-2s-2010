@@ -263,17 +263,15 @@ public class ResourceCB extends IflResourceCB
     		res.setAvailable(res.getAvailable() + released);
     		res.setAllocated(thread, 0);
     		
-    		/*while(e.hasMoreElements() && flag==false) {
-    			rrb = (RRB)e.nextElement();
-    			if(res == rrb.getResource() && res.getAvailable() >= rrb.getQuantity()) {
-    				RRBqueue.remove(rrb);
-    				rrb.grant();
-    				flag = true;
-    			}
-    		}*/
-    		
     	}
-        
+    	
+		while(e.hasMoreElements()) {
+			rrb = (RRB)e.nextElement();
+			if(rrb.getThread() == thread)
+				RRBqueue.remove(rrb);
+		}
+		
+	    RRBqueueGrant();
 
     }
 
@@ -312,14 +310,8 @@ public class ResourceCB extends IflResourceCB
        setAllocated(thread, allocated - quantity);
        setAvailable(available + quantity);
        e = RRBqueue.forwardIterator();
-	   /*while(e.hasMoreElements() && flag==false) {
-	        rrb = (RRB)e.nextElement();
-			if(this == rrb.getResource() && this.getAvailable() >= rrb.getQuantity()) {
-				RRBqueue.remove(rrb);
-				rrb.grant();
-				flag = true;
-			}
-	   }*/
+       
+       RRBqueueGrant();
 
     }
     
@@ -403,6 +395,20 @@ public class ResourceCB extends IflResourceCB
 	
 	@OSPProject Resources
     */
+    
+    private static void RRBqueueGrant(){
+    	Enumeration e = RRBqueue.forwardIterator();
+    	RRB rrb;    	
+    	
+		while(e.hasMoreElements()) {
+			rrb = (RRB)e.nextElement();
+			if(rrb.getResource().getAvailable() >= rrb.getQuantity()) {
+				RRBqueue.remove(rrb);
+				rrb.grant();
+			}
+		}
+    }
+    
     public static void atError()
     {
         // your code goes here
