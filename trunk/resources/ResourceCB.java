@@ -28,6 +28,13 @@ import osp.Memory.*;
 public class ResourceCB extends IflResourceCB
 {
 	private static GenericList RRBqueue;
+  private static GenericList threadList;
+	private static Hashtable[] max;
+	private static Hashtable[] allocated;
+	private static Hashtable[] need;
+	private static Hashtable[] finish;
+	private static int[] available;
+
     /**
        Creates a new ResourceCB instance with the given number of 
        available instances. This constructor must have super(qty) 
@@ -39,6 +46,7 @@ public class ResourceCB extends IflResourceCB
     {
         
         super(qty);
+        threadList = new GenericList();
 
     }
 
@@ -50,7 +58,26 @@ public class ResourceCB extends IflResourceCB
     */
     public static void init()
     {
-    	RRBqueue = new GenericList();
+			
+			ResourceTable rt = new ResourceTable();
+			int tam = rt.getSize();
+
+    	    RRBqueue = new GenericList();
+			max = new Hashtable[tam];
+            for(int i = 0; i < tam; i++) {
+                max[i] = new Hashtable();
+            }
+
+			allocated = new Hashtable[tam];
+            for(int i = 0; i < tam; i++) {
+                allocated[i] = new Hashtable();
+            }
+
+			need = new Hashtable[tam];
+            for(int i = 0; i < tam; i++) {
+                need[i] = new Hashtable();
+            }
+			available = new int[tam];
 
     }
 
@@ -77,9 +104,11 @@ public class ResourceCB extends IflResourceCB
         		return null;
             else{
         		if(quantity > this.getAvailable()){
-        			CThread.suspend(rrb);
+        				CThread.suspend(rrb);
         		    rrb.setStatus(Suspended);
         		    ResourceCB.RRBqueue.append(rrb);
+					if(!threadList.contains(CThread)) threadList.append(CThread);
+					need[this.getID()].put(CThread, new Integer(quantity));
         		    return null;
         		}
         		else{
@@ -100,10 +129,93 @@ public class ResourceCB extends IflResourceCB
     */
     public static Vector do_deadlockDetection()
     {
-        // your code goes here
-    	return null;
+       
+        ResourceTable resourceTable = new ResourceTable();
+        ResourceCB resource;
+        int qtdRecursos = resourceTable.getSize();
+        Vector  deadlockVector;
+        ThreadCB thread;
+        
+        /* Percorre a resource table guardando
+         * a quantidade de instancias disponiveis
+         * para cada recurso.  */
+        for(int i=0; i < qtdRecursos; i++) {
+            resource = ResourceTable.getResourceCB(i);
+            available[i] = resource.getAvailable();
+        }
+
+		if(deadlockDetection()) {
+			deadlockVector = new Vector<ThreadCB>(threadList.length());
+			for(int i = 0; i < threadList.length(); i++) {
+				deadlockVector.add((ThreadCB)threadList.removeHead());
+			}
+		} else {
+			return null;
+		}
+
+		while(deadlockDetection()) {
+			thread = (ThreadCB)threadList.removeHead();
+		    thread.kill();
+		}
+
+        return deadlockVector;
 
     }
+
+	private static boolean deadlockDetection() 
+	{
+
+		Enumeration requestCount;
+		int requestNum, resourceID, resourceQtd;
+		ThreadCB thread;
+		RRB rrb;
+		ResourceCB resource;
+		boolean cont = false, para;
+		ResourceTable table = new ResourceTable();
+        Integer needAux;
+        Object aux;
+
+		resourceQtd = table.getSize();
+
+		do {
+			cont = false;
+			requestCount = threadList.forwardIterator();
+			while(requestCount.hasMoreElements()) {
+			    thread = (ThreadCB)requestCount.nextElement();
+
+                para = true;
+				for(int i = 0; i < resourceQtd && para; i++) {
+                    aux = (need[i].get(thread));
+                    if(aux != null) {
+                        needAux = (Integer)aux;
+						if(needAux > available[i])	{
+					        para = false;
+						}
+                    }
+			    }
+
+			    if(para == true) {
+				    for(int i = 0; i < resourceQtd; i++) {
+                        aux = allocated[i].get(thread);
+                        if(aux != null) {
+    					    available[i] += (Integer)aux;
+                        }
+				    }
+					//finish.put(thread, true);
+					cont = true;
+					//threadList.remove(thread);
+				}
+			}
+		} while(cont);
+
+
+		if(threadList.length() != 0) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
 
     /**
        When a thread was killed, this is called to release all
@@ -128,14 +240,14 @@ public class ResourceCB extends IflResourceCB
     		res.setAvailable(res.getAvailable() + released);
     		res.setAllocated(thread, 0);
     		
-    		while(e.hasMoreElements() && flag==false) {
+    		/*while(e.hasMoreElements() && flag==false) {
     			rrb = (RRB)e.nextElement();
     			if(res == rrb.getResource() && res.getAvailable() >= rrb.getQuantity()) {
     				RRBqueue.remove(rrb);
     				rrb.grant();
     				flag = true;
     			}
-    		}
+    		}*/
     		
     	}
         
@@ -152,35 +264,39 @@ public class ResourceCB extends IflResourceCB
     public void do_release(int quantity)
     {
         
-    	Enumeration e = RRBqueue.forwardIterator();
-    	boolean flag=false;
-    	RRB rrb;
-        PageTable pageTable;
-        TaskCB task;
-        ThreadCB thread;
-        ResourceCB resource;
-        int available, allocated;
+       PageTable pageTable;
+       TaskCB task;
+       ThreadCB thread;
+       ResourceCB resource;
+       RRB rrb;
+       int available, allocated;
+       //ResourceCB resource;
+       //int available, allocated;
+       Enumeration e;
+       boolean flag = false;
 
-        /* Pega a thread que esta rodando. */
-        pageTable = MMU.getPTBR();
-        task = pageTable.getTask();
-        thread = task.getCurrentThread();
+       /* Pega a thread que esta rodando. */
+       pageTable = MMU.getPTBR();
+       task = pageTable.getTask();
+       thread = task.getCurrentThread();
 
-        /* Atualiza as quantidades de recursos disponiveis
-         * e alocados. */
-        allocated = this.getAllocated(thread);
-        available = this.getAvailable();
-        setAllocated(thread, allocated - quantity);
-        setAvailable(available + quantity);
-        
-		while(e.hasMoreElements() && flag==false) {
-			rrb = (RRB)e.nextElement();
+       //resource = getResource();
+
+       /* Atualiza as quantidades de recursos disponiveis
+        * e alocados. */
+       allocated = getAllocated(thread);
+       available = getAvailable();
+       setAllocated(thread, allocated - quantity);
+       setAvailable(available + quantity);
+       e = RRBqueue.forwardIterator();
+	   /*while(e.hasMoreElements() && flag==false) {
+	        rrb = (RRB)e.nextElement();
 			if(this == rrb.getResource() && this.getAvailable() >= rrb.getQuantity()) {
 				RRBqueue.remove(rrb);
 				rrb.grant();
 				flag = true;
 			}
-		}
+	   }*/
 
     }
 
