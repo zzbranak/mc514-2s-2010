@@ -28,7 +28,7 @@ import osp.Memory.*;
 public class ResourceCB extends IflResourceCB
 {
 	private static GenericList RRBqueue;
-  private static GenericList threadList;
+    private static GenericList threadList;
 	private static Hashtable[] max;
 	private static Hashtable[] allocated;
 	private static Hashtable[] need;
@@ -104,10 +104,12 @@ public class ResourceCB extends IflResourceCB
         		return null;
             else{
         		if(quantity > this.getAvailable()){
-        				CThread.suspend(rrb);
+        			CThread.suspend(rrb);
         		    rrb.setStatus(Suspended);
         		    ResourceCB.RRBqueue.append(rrb);
-					if(!threadList.contains(CThread)) threadList.append(CThread);
+					if(!threadList.contains(CThread)) {
+                        threadList.append(CThread);
+                    }
 					need[this.getID()].put(CThread, new Integer(quantity));
         		    return null;
         		}
@@ -130,38 +132,45 @@ public class ResourceCB extends IflResourceCB
     public static Vector do_deadlockDetection()
     {
        
-        ResourceTable resourceTable = new ResourceTable();
+        return null;
+        /*ResourceTable resourceTable = new ResourceTable();
         ResourceCB resource;
         int qtdRecursos = resourceTable.getSize();
         Vector  deadlockVector;
-        ThreadCB thread;
+        ThreadCB thread;*/
         
         /* Percorre a resource table guardando
          * a quantidade de instancias disponiveis
          * para cada recurso.  */
-        for(int i=0; i < qtdRecursos; i++) {
+        /*for(int i=0; i < qtdRecursos; i++) {
             resource = ResourceTable.getResourceCB(i);
             available[i] = resource.getAvailable();
-        }
+        }*/
 
-		if(deadlockDetection()) {
+        /* Verifica se esta em deadlock.
+         * Se estiver, cria o vetor das threads em deadlock.
+         * Se nao, retorna null*/
+		/*if(deadlockDetection()) {
 			deadlockVector = new Vector<ThreadCB>(threadList.length());
 			for(int i = 0; i < threadList.length(); i++) {
 				deadlockVector.add((ThreadCB)threadList.removeHead());
 			}
 		} else {
 			return null;
-		}
+		}*/
 
-		while(deadlockDetection()) {
+        /* Enquanto o sistem estiver em deadlock,
+         * vai matando thread a thread ate voltar ao normal.*/
+		/*while(deadlockDetection()) {
 			thread = (ThreadCB)threadList.removeHead();
 		    thread.kill();
 		}
 
-        return deadlockVector;
+        return deadlockVector;*/
 
     }
 
+    /* Funcao auxilir que verifica se o sistema esta em deadlock. */
 	private static boolean deadlockDetection() 
 	{
 
@@ -174,36 +183,49 @@ public class ResourceCB extends IflResourceCB
 		ResourceTable table = new ResourceTable();
         Integer needAux;
         Object aux;
+        int[] work;
 
 		resourceQtd = table.getSize();
+        work = new int[resourceQtd];
 
+        /* Copia o vetor de recursos disponiveis. */
+        for(int i=0; i < resourceQtd; i++) {
+            work[i] = available[i];
+        }
+
+        /* Percorre o vetor de threads com recursos pendentes
+         * enquanto existir threads podendo ser terminadas. */
 		do {
 			cont = false;
 			requestCount = threadList.forwardIterator();
+
 			while(requestCount.hasMoreElements()) {
 			    thread = (ThreadCB)requestCount.nextElement();
-
                 para = true;
+
+                /* Verifica para uma thread se existem recursos
+                * suficientes disponíveis, ou seja, a thread
+                * pode ser finalizada.  */
 				for(int i = 0; i < resourceQtd && para; i++) {
                     aux = (need[i].get(thread));
                     if(aux != null) {
                         needAux = (Integer)aux;
-						if(needAux > available[i])	{
+						if(needAux > work[i])	{
 					        para = false;
 						}
                     }
 			    }
 
+                /* A thread pode ser finalizada */
 			    if(para == true) {
 				    for(int i = 0; i < resourceQtd; i++) {
                         aux = allocated[i].get(thread);
                         if(aux != null) {
-    					    available[i] += (Integer)aux;
+    					    work[i] += (Integer)aux;
                         }
 				    }
-					//finish.put(thread, true);
 					cont = true;
-					//threadList.remove(thread);
+					threadList.remove(thread);
 				}
 			}
 		} while(cont);
