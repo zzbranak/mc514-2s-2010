@@ -51,21 +51,23 @@ public class RRB extends IflRRB
     */
     public void do_grant()
     {
-        ResourceCB resourceType;
+        ResourceCB resource;
         int available, quantity, allocated;
         ThreadCB thread;
 
-        quantity = this.getQuantity();
-        thread = this.getThread();
-        resourceType = this.getResource();
-        allocated = resourceType.getAllocated(thread);
-        available = resourceType.getAvailable();
+        quantity = getQuantity();
+        resource = getResource();
+        thread = getThread();
+        available = resource.getAvailable();
+        allocated = resource.getAllocated(thread);
+    
 
-
-        resourceType.setAvailable(available - quantity);
-        resourceType.setAllocated(thread, allocated + quantity);
-        this.setStatus(Granted);
-        this.notifyThreads();
+        if(available >= quantity) {
+            resource.setAvailable(available - quantity);
+            resource.setAllocated(thread, allocated + quantity);
+            setStatus(Granted);
+            notifyThreads();
+        }
 
     }
 
