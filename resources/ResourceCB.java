@@ -104,7 +104,7 @@ public class ResourceCB extends IflResourceCB
         	if(quantity + this.getAllocated(CThread) > this.getTotal())
         		return null;
             else{
-        		if(quantity > this.getAvailable()){
+        		if(quantity >= this.getAvailable()){
         			CThread.suspend(rrb);
         		    rrb.setStatus(Suspended);
         		    ResourceCB.RRBqueue.append(rrb);
@@ -291,8 +291,6 @@ public class ResourceCB extends IflResourceCB
        ResourceCB resource;
        RRB rrb;
        int available, allocated;
-       //ResourceCB resource;
-       //int available, allocated;
        Enumeration e;
        boolean flag = false;
 
@@ -309,7 +307,6 @@ public class ResourceCB extends IflResourceCB
        available = getAvailable();
        setAllocated(thread, allocated - quantity);
        setAvailable(available + quantity);
-       e = RRBqueue.forwardIterator();
        
        RRBqueueGrant();
 
