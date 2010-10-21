@@ -330,10 +330,15 @@ public class ResourceCB extends IflResourceCB
     	Enumeration threadEnum;
     	ThreadCB thread;
     	int resourceQtd = ResourceTable.getSize();
+    	int[] work = new int[resourceQtd];
+    	boolean para, cont;
+    	Object aux;
+    	Integer needAux;
     	
     	for(int i=0; i<resourceQtd; i++){
             resource = ResourceTable.getResourceCB(i);
             available[i] = resource.getAvailable();
+            work[i] = available[i];
     	}
     	
     	/* Cria as hashes contendo 
@@ -348,11 +353,47 @@ public class ResourceCB extends IflResourceCB
     			max[i].put(thread, resource.getMaxClaim(thread));
     			allocated[i].put(thread, resource.getAllocated(thread));
     			need[i].put(thread, resource.getMaxClaim(thread) - resource.getAllocated(thread));
-    			
     		}
     	}
     	
-    	return false;
+    	do {
+    		cont = false;
+    		threadEnum = threadList.forwardIterator();
+    		while(threadEnum.hasMoreElements()) {
+    			thread = (ThreadCB)threadEnum.nextElement();
+    			para = true;
+    		
+    			/* Verifica se a thread pode ser finalizada. */
+    			for(int i = 0; i<resourceQtd && para; i++) {
+    				aux = need[i].get(thread);
+    				if(aux != null) {
+    					needAux = (Integer)aux;
+    					if(needAux > work[i]) {
+    						para = false;
+    					}
+    				}
+    			}
+    		
+    			/* A thread pode ser finalizada. */
+    			if(para = true) {
+    				for(int i = 0; i<resourceQtd; i++) {
+    					aux = need[i].get(thread);
+    					if(aux != null) {
+    						work[i] += (Integer)aux;
+    					}
+    					threadList.remove(thread);
+    					cont = true;
+    				}
+    			}
+    		}
+    	} while(cont);
+    	
+    	if(threadList.length() != 0) {
+    		return false;
+    	} else {
+    		return true;
+    	}
+    	
     }
 
     /** Called by OSP after printing an error message. The student can
