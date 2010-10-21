@@ -63,6 +63,7 @@ public class ResourceCB extends IflResourceCB
 			int tam = rt.getSize();
 
     	    RRBqueue = new GenericList();
+    	    
 			max = new Hashtable[tam];
             for(int i = 0; i < tam; i++) {
                 max[i] = new Hashtable();
@@ -320,6 +321,38 @@ public class ResourceCB extends IflResourceCB
 			}
 	   }*/
 
+    }
+    
+    private boolean do_deadlockAvoidance()
+    {
+    	//ResourceTable rt = new ResourceTable();
+    	ResourceCB resource;
+    	Enumeration threadEnum;
+    	ThreadCB thread;
+    	int resourceQtd = ResourceTable.getSize();
+    	
+    	for(int i=0; i<resourceQtd; i++){
+            resource = ResourceTable.getResourceCB(i);
+            available[i] = resource.getAvailable();
+    	}
+    	
+    	/* Cria as hashes contendo 
+    	 * numero maximo de recursos por tipo que uma thread pode requisitar, 
+    	 * quantidade de recursos alocados por thread e
+    	 * quantidade de recursos que a thread ainda pode requisitar. */
+    	threadEnum = threadList.forwardIterator();
+    	while(threadEnum.hasMoreElements()) {
+    		thread = (ThreadCB)threadEnum.nextElement();
+    		for(int i = 0; i<resourceQtd; i++) {
+    			resource = ResourceTable.getResourceCB(i);
+    			max[i].put(thread, resource.getMaxClaim(thread));
+    			allocated[i].put(thread, resource.getAllocated(thread));
+    			need[i].put(thread, resource.getMaxClaim(thread) - resource.getAllocated(thread));
+    			
+    		}
+    	}
+    	
+    	return false;
     }
 
     /** Called by OSP after printing an error message. The student can
