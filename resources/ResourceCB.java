@@ -378,6 +378,7 @@ public class ResourceCB extends IflResourceCB
     	boolean para, cont;
     	Object aux;
     	Integer needAux;
+		GenericList threadListAux = new GenericList();
     	
     	for(int i=0; i<resourceQtd; i++){
             resource = ResourceTable.getResourceCB(i);
@@ -399,10 +400,15 @@ public class ResourceCB extends IflResourceCB
     			need[i].put(thread, resource.getMaxClaim(thread) - resource.getAllocated(thread));
     		}
     	}
-    	
+
+		threadEnum = threadList.forwardIterator();
+		while(threadEnum.hasMoreElements) {
+			threadListAux.append(threadEnum.nextElement());
+		}
+
     	do {
     		cont = false;
-    		threadEnum = threadList.forwardIterator();
+    		threadEnum = threadListAux.forwardIterator();
     		while(threadEnum.hasMoreElements()) {
     			thread = (ThreadCB)threadEnum.nextElement();
     			para = true;
@@ -425,14 +431,14 @@ public class ResourceCB extends IflResourceCB
     					if(aux != null) {
     						work[i] += (Integer)aux;
     					}
-    					threadList.remove(thread);
+    					threadListAux.remove(thread);
     					cont = true;
     				}
     			}
     		}
     	} while(cont);
     	
-    	if(threadList.length() != 0) {
+    	if(threadListAux.length() != 0) {
     		return false;
     	} else {
     		return true;
