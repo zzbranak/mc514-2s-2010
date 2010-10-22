@@ -316,10 +316,10 @@ public class ResourceCB extends IflResourceCB
        allocated = getAllocated(thread);
        available = getAvailable();
        id = getID();
-       if(((Integer)allocated[id].get(thread)) - quantity == 0) {
-    	   allocated[id].remove(thread);
+       if(((Integer)(ResourceCB.allocated[id].get(thread))) - quantity == 0) {
+    	   ResourceCB.allocated[id].remove(thread);
        } else {
-    	   allocated[id].put(thread, ((Integer)allocated[id].get(thread)) - quantity);
+    	   ResourceCB.allocated[id].put(thread, ((Integer)(ResourceCB.allocated[id].get(thread))) - quantity);
        }
        this.setAllocated(thread, allocated - quantity);
        this.setAvailable(available + quantity);
