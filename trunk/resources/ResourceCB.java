@@ -402,7 +402,7 @@ public class ResourceCB extends IflResourceCB
     	}
 
 		threadEnum = threadList.forwardIterator();
-		while(threadEnum.hasMoreElements) {
+		while(threadEnum.hasMoreElements()) {
 			threadListAux.append(threadEnum.nextElement());
 		}
 
