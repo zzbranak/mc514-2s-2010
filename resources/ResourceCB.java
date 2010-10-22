@@ -301,7 +301,7 @@ public class ResourceCB extends IflResourceCB
        ThreadCB thread;
        ResourceCB resource;
        RRB rrb;
-       int available, allocated;
+       int available, allocated, id;
        Enumeration e = RRBqueue.forwardIterator();
        boolean flag = false;
 
@@ -315,10 +315,11 @@ public class ResourceCB extends IflResourceCB
         * e alocados. */
        allocated = getAllocated(thread);
        available = getAvailable();
-       if(((Integer)allocated[getID()].get(thread)) - quantity == 0) {
-    	   allocated[getID()].remove(thread);
+       id = getID();
+       if(((Integer)allocated[id].get(thread)) - quantity == 0) {
+    	   allocated[id].remove(thread);
        } else {
-    	   allocated[getID()].put(thread, ((Integer)allocated[getID()].get(thread)) - quantity);
+    	   allocated[id].put(thread, ((Integer)allocated[id].get(thread)) - quantity);
        }
        this.setAllocated(thread, allocated - quantity);
        this.setAvailable(available + quantity);
