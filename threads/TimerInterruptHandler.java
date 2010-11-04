@@ -1,3 +1,14 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status: Completo
+*
+* 23/09/2010
+*
+* */ 
+
 package osp.Threads;
 
 import osp.IFLModules.*;

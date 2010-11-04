@@ -5,9 +5,9 @@
 *
 * Status: Incompleto
 * 
-* 1. Dificuldades nos métodos do_acquire e deadlock detection. Poucas especificações no livro.
+* 1. Não conseguimos fazer o Deadlock Detection e o Deadlock Avoidance funcionarem corretamente. Resto do código funciona perfeitamente
 *
-* 07/10/2010
+* 23/10/2010
 *
 * */
 
@@ -59,8 +59,7 @@ public class ResourceCB extends IflResourceCB
     public static void init()
     {
 			
-			ResourceTable rt = new ResourceTable();
-			int tam = rt.getSize();
+			int tam = ResourceTable.getSize();
 
     	    RRBqueue = new GenericList();
     	    
@@ -100,6 +99,10 @@ public class ResourceCB extends IflResourceCB
         ThreadCB CThread = CTask.getCurrentThread();
         RRB rrb = new RRB(CThread, this, quantity);        
         
+        /* Se o método de tratamento de deadlocks for detection, executa três passos */
+        /* Testa se a quantidade de instâncias do recurso pedidas é maior que o total ou se o alocado a thread + o que ela pede é maior que */
+        /* o total que ela pode pedir, caso sim para um dos dois, retorna null */
+        /* se a quantidade de pedidos for maior que o disponível, suspende a thread o rrb e o rrb, senão, dá grant no rrb e retorna ele */
         if(ResourceCB.getDeadlockMethod() == Detection){
         	if(quantity > this.getTotal() || this.getAllocated(CThread) + quantity > this.getMaxClaim(CThread))
         		return null;
@@ -136,9 +139,8 @@ public class ResourceCB extends IflResourceCB
     public static Vector do_deadlockDetection()
     {
        
-        ResourceTable resourceTable = new ResourceTable();
         ResourceCB resource;
-        int qtdRecursos = resourceTable.getSize();
+        int qtdRecursos = ResourceTable.getSize();
         Vector  deadlockVector;
         ThreadCB thread;
         GenericList currentThreadList = new GenericList();
@@ -202,12 +204,11 @@ public class ResourceCB extends IflResourceCB
 		RRB rrb;
 		ResourceCB resource;
 		boolean cont = false, para;
-		ResourceTable table = new ResourceTable();
         Integer needAux;
         Object aux;
         int[] work;
 
-		resourceQtd = table.getSize();
+		resourceQtd = ResourceTable.getSize();
         work = new int[resourceQtd];
 
         /* Copia o vetor de recursos disponiveis. */
@@ -245,10 +246,10 @@ public class ResourceCB extends IflResourceCB
                         aux = allocated[i].get(thread);
                         if(aux != null) {
     					    work[i] += (Integer)aux;
-    					    /*allocated[i].remove(thread);
+    					    allocated[i].remove(thread);
     					    if(need[i].containsKey(thread)) {;
 								need[i].remove(thread);
-							}*/
+							}
                         }
 				    }
 					cont = true;
@@ -263,7 +264,7 @@ public class ResourceCB extends IflResourceCB
         }
 
 		if(inThreadList.length() != 0) {
-			while(threadList.length() > 0) {
+			while(inThreadList.length() > 0) {
 				outThreadList.append(inThreadList.removeHead());
 			}
 			return true;
@@ -289,12 +290,15 @@ public class ResourceCB extends IflResourceCB
     	ResourceCB res;
     	RRB rrb;
     	
+    	/* Passeia na lista de RRB's suspensos retirando os RRB's que pertencem a thread que está desistindo */
+    	/* Dos recursos */
 		while(e.hasMoreElements()) {
 			rrb = (RRB)e.nextElement();
 			if(rrb.getThread().getID() == thread.getID())
 				RRBqueue.remove(rrb);
 		}
     	
+		/* Para todos os tipos de recursos, tira os desse alocados a thread, e adiciona eles aos available */
     	for(i=0;i<ResourceTable.getSize();i++){
     		
     		res = ResourceTable.getResourceCB(i);
@@ -354,14 +358,7 @@ public class ResourceCB extends IflResourceCB
        }
        this.setAllocated(thread, allocated - quantity);
        this.setAvailable(available + quantity);
-       
-		/*while(e.hasMoreElements() && flag == false) {
-			rrb = (RRB)e.nextElement();
-			if(rrb.getThread().getID() == thread.getID() && rrb.getResource() == this){
-				if(this.getAllocated(thread) == 0) RRBqueue.remove(rrb);
-				flag = true;
-			}
-		}*/
+      
        
        RRBqueueGrant();
 
@@ -454,22 +451,20 @@ public class ResourceCB extends IflResourceCB
 	@OSPProject Resources
     */
     
+    /* Método Auxiliar */
+    /* Passeia na lista de RRB's suspensos, procurando um que pode ser granted. se achar, o faz */
     private static void RRBqueueGrant(){
     	Enumeration e = RRBqueue.forwardIterator();
     	RRB rrb;    	
-    	int flag = 1;
-    	
-    	while(flag == 1) {
-    		flag = 0;
-			while(e.hasMoreElements()) {
-				rrb = (RRB)e.nextElement();
-				if(rrb.getResource().getAvailable() > rrb.getQuantity()) {
-					flag = 1;
-					RRBqueue.remove(rrb);
-					rrb.grant();
-				}
+    	   	
+	    while(e.hasMoreElements()) {
+			rrb = (RRB)e.nextElement();
+			if(rrb.getResource().getAvailable() > rrb.getQuantity()) {
+				RRBqueue.remove(rrb);
+				rrb.grant();
 			}
-    	}
+		}
+    	
     }
     
     public static void atError()

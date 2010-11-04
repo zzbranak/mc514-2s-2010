@@ -5,9 +5,9 @@
 *
 * Status: Incompleto
 * 
-* 1. Dificuldades nos métodos do_acquire e deadlock detection. Poucas especificações no livro.
+* 1. Não conseguimos fazer o Deadlock Detection e o Deadlock Avoidance funcionarem corretamente. Resto do código funciona perfeitamente
 *
-* 07/10/2010
+* 23/10/2010
 *
 * */
 
