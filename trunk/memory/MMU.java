@@ -17,6 +17,8 @@ import osp.Interrupts.*;
 */
 public class MMU extends IflMMU
 {
+	//private static FrameTableEntry[] frameTable;
+	
     /** 
         This method is called once before the simulation starts. 
 	Can be used to initialize the frame table and other static variables.
@@ -25,7 +27,15 @@ public class MMU extends IflMMU
     */
     public static void init()
     {
-        // your code goes here
+    	
+    	/* Cria a FrameTable e associa uma FrameTableEntry a cada entrada. */
+    	int frameTableSize = MMU.getFrameTableSize();
+        //MMU.frameTable = new FrameTableEntry[frameTableSize];
+        
+        for(int i=0; i<frameTableSize; i++) {
+        	//MMU.frameTable[i] = new FrameTableEntry(i);
+        	MMU.setFrame(i, new FrameTableEntry(i));
+        }
 
     }
 
@@ -51,7 +61,10 @@ public class MMU extends IflMMU
     static public PageTableEntry do_refer(int memoryAddress,
 					  int referenceType, ThreadCB thread)
     {
-        // your code goes here
+        MyOut.print("osp.Memory.MMU", "@@@" + getVirtualAddressBits());
+        MyOut.print("osp.Memory.MMU", "###" + getPageAddressBits());
+        
+        return null;
 
     }
 

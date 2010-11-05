@@ -76,7 +76,7 @@ public class PageFaultHandler extends IflPageFaultHandler
 					 int referenceType,
 					 PageTableEntry page)
     {
-        // your code goes here
+        return 0;
 
     }
 
