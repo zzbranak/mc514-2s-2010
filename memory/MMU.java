@@ -61,9 +61,15 @@ public class MMU extends IflMMU
     static public PageTableEntry do_refer(int memoryAddress,
 					  int referenceType, ThreadCB thread)
     {
-        MyOut.print("osp.Memory.MMU", "@@@" + getVirtualAddressBits());
-        MyOut.print("osp.Memory.MMU", "###" + getPageAddressBits());
-        
+    
+    	/* Pega a pagina do endereço de memoria. */
+    	virtualAddressBits = getVirtualAddressBits();
+    	pageAddressBits = getPageAddressBits();
+    	offsetBits = virtualAddressBits - pageAddressBits;
+    	pageSize = pow(2, offsetBits);
+    	pageNum = memoryAddress / pageSize;
+    	
+    	                
         return null;
 
     }
