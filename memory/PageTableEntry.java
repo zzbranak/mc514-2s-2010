@@ -27,7 +27,7 @@ public class PageTableEntry extends IflPageTableEntry
     */
     public PageTableEntry(PageTable ownerPageTable, int pageNumber)
     {
-        super(ownerPageTable, pageNumber);
+       super(ownerPageTable, pageNumber);
 
     }
 
@@ -47,7 +47,7 @@ public class PageTableEntry extends IflPageTableEntry
      */
     public int do_lock(IORB iorb)
     {
-        // your code goes here
+        return 0;
 
     }
 

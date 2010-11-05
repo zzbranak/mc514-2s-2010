@@ -15,7 +15,7 @@ import osp.Hardware.*;
 public class PageTable extends IflPageTable
 {
 	double PTBsize = Math.pow(2,MMU.getPageAddressBits());
-    PageTableEntry[] PageTable;
+    //PageTableEntry[] PageTable;
     /** 
 	The page table constructor. Must call
 	
@@ -28,11 +28,13 @@ public class PageTable extends IflPageTable
     public PageTable(TaskCB ownerTask)
     {
         super(ownerTask);       
-        PageTable = new PageTableEntry[(int)this.PTBsize];
+        pages = new PageTableEntry[(int)this.PTBsize];
+        ownerTask.setPageTable(this);
         
         for(int i=0;i<this.PTBsize;i++){
-        	PageTable[i] = new PageTableEntry(this, i);
+        	pages[i] = new PageTableEntry(this, i);
         }
+
 
     }
 
@@ -44,7 +46,7 @@ public class PageTable extends IflPageTable
     */
     public void do_deallocateMemory()
     {
-        TaskCB task;
+       /* TaskCB task;
     	
         for(int i=0;i<PTBsize;i++){
         	this.PageTable[i].getFrame().setPage(null);
@@ -52,7 +54,7 @@ public class PageTable extends IflPageTable
         	this.PageTable[i].getFrame().setReferenced(false);
         	task = this.PageTable[i].getFrame().getReserved();
         	if(task != null)this.PageTable[i].getFrame().setUnreserved(task);
-        }
+        }*/
 
     }
 
