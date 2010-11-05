@@ -29,7 +29,6 @@ public class PageTable extends IflPageTable
     {
         super(ownerTask);       
         pages = new PageTableEntry[(int)this.PTBsize];
-        ownerTask.setPageTable(this);
         
         for(int i=0;i<this.PTBsize;i++){
         	pages[i] = new PageTableEntry(this, i);
