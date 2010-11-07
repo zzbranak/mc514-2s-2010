@@ -1,7 +1,12 @@
 package osp.Memory;
 
-import osp.IFLModules.IflMMU;
-import osp.Threads.ThreadCB;
+import java.util.*;
+import osp.IFLModules.*;
+import osp.Threads.*;
+import osp.Tasks.*;
+import osp.Utilities.*;
+import osp.Hardware.*;
+import osp.Interrupts.*;
 
 /**
     The MMU class contains the student code that performs the work of
@@ -56,8 +61,10 @@ public class MMU extends IflMMU
     static public PageTableEntry do_refer(int memoryAddress,
 					  int referenceType, ThreadCB thread)
     {
-    	int EndMax;
-    	int PageSize;
+    	int VAb = getVirtualAddressBits();
+    	int PAb = getPageAddressBits();
+    	int EndMax = 1;
+    	int PageSize = 1;
     	int offsetBits;
     	int PageNum;
     	int PageTot;
@@ -65,21 +72,44 @@ public class MMU extends IflMMU
     	
     
     	/* Pega a pagina do endereço de memoria. */
-    	EndMax = 2^getVirtualAddressBits();
-    	PageSize = 2^getPageAddressBits();
+    	
+    	for(int i=0;i<VAb;i++) EndMax = EndMax*2;
+    	for(int i=0;i<PAb;i++) PageSize = PageSize*2;
     	PageTot = EndMax / PageSize;
     	offsetBits = memoryAddress % PageSize;
-    	PageNum = memoryAddress / PageSize;
-    	OSP.Utilities.MyOut.print("osp.Memory.MMU", "###Endereço Máximo: " + EndMax);
+    	PageNum = memoryAddress / PageTot;
+    	MyOut.print("osp.Memory.MMU", "###Endereço de memória: " + memoryAddress);
+    	MyOut.print("osp.Memory.MMU", "###Bits de Endereçamento: " + getVirtualAddressBits());
+    	MyOut.print("osp.Memory.MMU", "###Bits de Pagina: " + getPageAddressBits());
+    	MyOut.print("osp.Memory.MMU", "###Endereço Máximo: " + EndMax);
     	MyOut.print("osp.Memory.MMU", "###Tamanho da Página: " + PageSize);
     	MyOut.print("osp.Memory.MMU", "###Total de Páginas: " + PageTot);
     	MyOut.print("osp.Memory.MMU", "###offset: " + offsetBits);
     	MyOut.print("osp.Memory.MMU", "###Número da Página referenciada: " + PageNum);
     	MyOut.print("osp.Memory.MMU", "###Total de páginas da PageTable: " + PTb.PTBsize);
     	
-    	//if(PTb != null && PTb.pages[PageNum].isValid());
-    	                
-        return null;
+    	if(PTb != null && PTb.pages[PageNum-1].isValid()){
+    		PTb.pages[PageNum-1].getFrame().setDirty(true);
+    		PTb.pages[PageNum-1].getFrame().setReferenced(true);
+    		return PTb.pages[PageNum-1];
+    	}  	                
+    	else{
+    		if(PTb.pages[PageNum-1].getValidatingThread() == null){
+    			thread.suspend(PTb.pages[PageNum-1]);
+    		}
+    		else{
+    			InterruptVector.setInterruptType(PageFault);
+    			InterruptVector.setThread(thread);
+    			InterruptVector.setPage(PTb.pages[PageNum-1]);
+    			CPU.interrupt(PageFault);
+    			
+    		}
+			if(thread.getStatus() != ThreadKill){
+	    		PTb.pages[PageNum-1].getFrame().setDirty(true);
+	    		PTb.pages[PageNum-1].getFrame().setReferenced(true);
+			}
+    		return PTb.pages[PageNum-1];
+    	}
 
     }
 
@@ -92,7 +122,6 @@ public class MMU extends IflMMU
      */
     public static void atError()
     {
-        // your code goes here
 
     }
 

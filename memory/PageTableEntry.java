@@ -1,7 +1,11 @@
 package osp.Memory;
 
-import osp.Devices.IORB;
-import osp.IFLModules.IflPageTableEntry;
+import osp.Hardware.*;
+import osp.Tasks.*;
+import osp.Threads.*;
+import osp.Devices.*;
+import osp.Utilities.*;
+import osp.IFLModules.*;
 /**
    The PageTableEntry object contains information about a specific virtual
    page in memory, including the page frame in which it resides.

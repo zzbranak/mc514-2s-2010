@@ -1,6 +1,14 @@
 package osp.Memory;
-import osp.IFLModules.IflPageFaultHandler;
-import osp.Threads.ThreadCB;
+import java.util.*;
+import osp.Hardware.*;
+import osp.Threads.*;
+import osp.Tasks.*;
+import osp.FileSys.FileSys;
+import osp.FileSys.OpenFile;
+import osp.IFLModules.*;
+import osp.Interrupts.*;
+import osp.Utilities.*;
+import osp.IFLModules.*;
 
 /**
     The page fault handler is responsible for handling a page
@@ -66,16 +74,99 @@ public class PageFaultHandler extends IflPageFaultHandler
     */
     public static int do_handlePageFault(ThreadCB thread, 
 					 int referenceType,
-					 PageTableEntry page)
-    {
-        return 0;
+					 PageTableEntry page){
+    	
+    	boolean flag = false;
+        int FTsize = MMU.getFrameTableSize();
+        FrameTableEntry FEntry;
+        SystemEvent pfEvent = new SystemEvent("PageFault");
+    	
+        /* Checa se o pedido de tratamento de pagefault é válido, testando se a página mandada
+         * tem ou não frame alocado. Caso tenha, o pedido é inválido e retorna false */
+        if(page.getFrame() != null) return FAILURE;
+        
+        /* Checa se há frames não locked e não reservadas para que possa ocorrer swap-out. Caso
+         * não haja nenhum que obedeca as duas regras, devolve memória insuficiente */
+        for(int i=0;i<FTsize;i++){
+        	FEntry = MMU.getFrame(i);
+        	if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false) flag = true;
+        }
+        if(flag == false) return NotEnoughMemory;
+        
+        
+        thread.suspend(pfEvent);
+        
+        FEntry = FindFreeFrame();
+        if(FEntry.getPage() == null){
+        	page.setFrame(FEntry);
+        }
+        else
+        	if(FEntry.isDirty() == false){
+        		FEntry.FreeingFrame();
+        	}
+              
+
+        	
+        if(thread.getStatus() == ThreadKill) return FAILURE;
+        
+        else return SUCCESS;
 
     }
+    
+  
+    /** Método Auxiliar: Faz uma busca pela tabela de frames para encontrar uma que sirva para ser usada
+     * pela página, segundo o algoritmo de 'clock'. Primeiro, roda a tabela de frames atrás de uma cujo
+     * bit de referência seja zero, zerando todos que não forem. Se encontrar uma frame nessa condição,
+     * testa se sua quantidade de locks é zero e se ela não está reservada, pois caso uma dessas condições
+     * seja falsa, a frame não poderá ser usada. Caso encontre uma frame com essas três condições, retorna
+     * ela. Senão, após mudar todos os bits de referência, roda a tabela de frames novamente buscando uma
+     * que satisfaça as condições de locks = 0 e referência = false, e usa a primeira que achar. Note que
+     * na segunda vez que rodamos a tabela, SEMPRE haverá uma frame que obedeça a essas condições, pois
+     * antes de chamar esse método, nós rastreamos a tabela de frames buscando frames cujo lock = 0 e
+     * a referência = false, e não chamamos esse método caso não houvesse frames nessa situação. Além
+     * disso, como a primeira vez que rodamos setamos o bit de referência para false, as frames que nao
+     * puderam ser usadas no loop anterior por ter sua referência como true, poderão ser agora
+     * 
+     * @return objeto do tipo FrameTableEntry - Frame a ser usada
+     */
+    public static FrameTableEntry FindFreeFrame(){
+        int FTsize = MMU.getFrameTableSize();
+        FrameTableEntry FEntry;
+        
+        for(int i=0;i<FTsize;i++){
+        	FEntry = MMU.getFrame(i);
+        	
+        	if(FEntry.isReferenced() == false){
+        		if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false){
+        			return FEntry;
+        		}
+        		else{
+        			FEntry.setReferenced(false);
+        		}
+        	}
+        	else FEntry.setReferenced(false);
+        }
+        for(int i=0;i<FTsize;i++){
+            FEntry = MMU.getFrame(i);
+            if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false && FEntry.isReferenced() == true)
+            	return FEntry;
+        }
+        return null;
+    }
 
-
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
+    public static void SwapOut(PageTableEntry page, ThreadCB OwnThread){
+    	
+    	OpenFile SwpFile = page.getTask().getSwapFile();
+    	SwpFile.write(page.getID(), page, OwnThread);
+    	
+    }
+    
+    public static void SwapIn(PageTableEntry page, ThreadCB OwnThread){
+    	
+    	OpenFile SwpFile = page.getTask().getSwapFile();
+    	SwpFile.read(page.getID(), page, OwnThread);
+    	
+    }
 
 }
 
