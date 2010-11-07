@@ -6,6 +6,9 @@ package osp.Memory;
 
     @OSPProject Memory
 */
+import osp.Tasks.*;
+import osp.Interrupts.*;
+import osp.Utilities.*;
 import osp.IFLModules.IflFrameTableEntry;
 
 public class FrameTableEntry extends IflFrameTableEntry
@@ -25,10 +28,13 @@ public class FrameTableEntry extends IflFrameTableEntry
 
     }
 
-
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
+    /** Método Auxiliar: Libera uma frame. Seta sua página para nula, seu dirty bit para false e
+     *  seu bit de referência para falso */
+    public void FreeingFrame(){
+    	this.setPage(null);
+    	this.setDirty(false);
+    	this.setReferenced(false);
+    }
 
 }
 
