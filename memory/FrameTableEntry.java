@@ -6,9 +6,6 @@ package osp.Memory;
 
     @OSPProject Memory
 */
-import osp.Tasks.*;
-import osp.Interrupts.*;
-import osp.Utilities.*;
 import osp.IFLModules.IflFrameTableEntry;
 
 public class FrameTableEntry extends IflFrameTableEntry

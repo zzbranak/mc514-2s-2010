@@ -1,12 +1,7 @@
 package osp.Memory;
 
-import java.util.*;
-import osp.IFLModules.*;
-import osp.Threads.*;
-import osp.Tasks.*;
-import osp.Utilities.*;
-import osp.Hardware.*;
-import osp.Interrupts.*;
+import osp.IFLModules.IflMMU;
+import osp.Threads.ThreadCB;
 
 /**
     The MMU class contains the student code that performs the work of
@@ -61,14 +56,28 @@ public class MMU extends IflMMU
     static public PageTableEntry do_refer(int memoryAddress,
 					  int referenceType, ThreadCB thread)
     {
+    	int EndMax;
+    	int PageSize;
+    	int offsetBits;
+    	int PageNum;
+    	int PageTot;
+    	PageTable PTb = getPTBR();
+    	
     
     	/* Pega a pagina do endereço de memoria. */
-    	virtualAddressBits = getVirtualAddressBits();
-    	pageAddressBits = getPageAddressBits();
-    	offsetBits = virtualAddressBits - pageAddressBits;
-    	pageSize = pow(2, offsetBits);
-    	pageNum = memoryAddress / pageSize;
+    	EndMax = 2^getVirtualAddressBits();
+    	PageSize = 2^getPageAddressBits();
+    	PageTot = EndMax / PageSize;
+    	offsetBits = memoryAddress % PageSize;
+    	PageNum = memoryAddress / PageSize;
+    	OSP.Utilities.MyOut.print("osp.Memory.MMU", "###Endereço Máximo: " + EndMax);
+    	MyOut.print("osp.Memory.MMU", "###Tamanho da Página: " + PageSize);
+    	MyOut.print("osp.Memory.MMU", "###Total de Páginas: " + PageTot);
+    	MyOut.print("osp.Memory.MMU", "###offset: " + offsetBits);
+    	MyOut.print("osp.Memory.MMU", "###Número da Página referenciada: " + PageNum);
+    	MyOut.print("osp.Memory.MMU", "###Total de páginas da PageTable: " + PTb.PTBsize);
     	
+    	//if(PTb != null && PTb.pages[PageNum].isValid());
     	                
         return null;
 

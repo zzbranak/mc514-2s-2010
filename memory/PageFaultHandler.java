@@ -1,14 +1,6 @@
 package osp.Memory;
-import java.util.*;
-import osp.Hardware.*;
-import osp.Threads.*;
-import osp.Tasks.*;
-import osp.FileSys.FileSys;
-import osp.FileSys.OpenFile;
-import osp.IFLModules.*;
-import osp.Interrupts.*;
-import osp.Utilities.*;
-import osp.IFLModules.*;
+import osp.IFLModules.IflPageFaultHandler;
+import osp.Threads.ThreadCB;
 
 /**
     The page fault handler is responsible for handling a page
