@@ -6,11 +6,8 @@ package osp.Memory;
 
     @OSPProject Memory
 */
-import java.lang.Math;
-import osp.Tasks.*;
-import osp.Utilities.*;
-import osp.IFLModules.*;
-import osp.Hardware.*;
+import osp.IFLModules.IflPageTable;
+import osp.Tasks.TaskCB;
 
 public class PageTable extends IflPageTable
 {
