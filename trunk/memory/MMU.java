@@ -88,27 +88,30 @@ public class MMU extends IflMMU
     	MyOut.print("osp.Memory.MMU", "###Número da Página referenciada: " + PageNum);
     	MyOut.print("osp.Memory.MMU", "###Total de páginas da PageTable: " + PTb.PTBsize);
     	
-    	if(PTb != null && PTb.pages[PageNum-1].isValid()){
-    		PTb.pages[PageNum-1].getFrame().setDirty(true);
-    		PTb.pages[PageNum-1].getFrame().setReferenced(true);
-    		return PTb.pages[PageNum-1];
+    	if(PTb.pages[PageNum].isValid() == true){
+    		if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
+    		PTb.pages[PageNum].getFrame().setReferenced(true);
+    		return PTb.pages[PageNum];
     	}  	                
     	else{
-    		if(PTb.pages[PageNum-1].getValidatingThread() == null){
-    			thread.suspend(PTb.pages[PageNum-1]);
+    		if(PTb.pages[PageNum].getValidatingThread() != null){
+    			MyOut.print("osp.Memory.MMU", "$$$$$$$ PÁGINA INVÁLIDA, MAS A CAMINHO");
+    			thread.suspend(PTb.pages[PageNum]);
     		}
     		else{
+    			MyOut.print("osp.Memory.MMU", "$$$$$$$ PÁGINA TOTALMENTE INVÁLIDA");
     			InterruptVector.setInterruptType(PageFault);
     			InterruptVector.setThread(thread);
-    			InterruptVector.setPage(PTb.pages[PageNum-1]);
+    			InterruptVector.setPage(PTb.pages[PageNum]);
     			CPU.interrupt(PageFault);
     			
     		}
 			if(thread.getStatus() != ThreadKill){
-	    		PTb.pages[PageNum-1].getFrame().setDirty(true);
-	    		PTb.pages[PageNum-1].getFrame().setReferenced(true);
+				if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
+	    		
+	    		PTb.pages[PageNum].getFrame().setReferenced(true);
 			}
-    		return PTb.pages[PageNum-1];
+    		return PTb.pages[PageNum];
     	}
 
     }

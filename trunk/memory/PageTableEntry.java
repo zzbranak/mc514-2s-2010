@@ -47,7 +47,34 @@ public class PageTableEntry extends IflPageTableEntry
      */
     public int do_lock(IORB iorb)
     {
-        return 0;
+    	ThreadCB CallingThread = iorb.getThread();
+    	ThreadCB pfThread = this.getValidatingThread();
+  
+    	if(pfThread == null){
+    		if(this.isValid() == false){
+    	    	MyOut.print("osp.Memory.PageTableEntry", "##################");
+            	if(PageFaultHandler.handlePageFault(iorb.getThread(), MemoryLock, this) == SUCCESS){
+                	this.getFrame().incrementLockCount();
+                	return SUCCESS;
+            	}
+    		    return FAILURE;
+    		}   
+        	this.getFrame().incrementLockCount();
+        	return SUCCESS;
+    	}
+    	
+    	if(pfThread == CallingThread){
+	    	MyOut.print("osp.Memory.PageTableEntry", "%%%%%%%%%%%%%%%%%");
+        	this.getFrame().incrementLockCount();
+        	return SUCCESS;
+    	}
+
+    	CallingThread.suspend(this);
+    	if(CallingThread.getStatus() != ThreadKill && this.isValid()){
+        	this.getFrame().incrementLockCount();
+        	return SUCCESS;
+    	}
+    	return FAILURE;
 
     }
 
@@ -59,7 +86,7 @@ public class PageTableEntry extends IflPageTableEntry
     */
     public void do_unlock()
     {
-        // your code goes here
+        this.getFrame().decrementLockCount();
 
     }
 

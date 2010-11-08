@@ -31,9 +31,15 @@ public class FrameTableEntry extends IflFrameTableEntry
     /** Método Auxiliar: Libera uma frame. Seta sua página para nula, seu dirty bit para false e
      *  seu bit de referência para falso */
     public void FreeingFrame(){
-    	this.setPage(null);
+  
     	this.setDirty(false);
     	this.setReferenced(false);
+    	if(this.getPage() != null){
+        	this.getPage().setValid(false);
+        	this.getPage().setFrame(null);
+    	}
+    	
+    	this.setPage(null);
     }
 
 }
