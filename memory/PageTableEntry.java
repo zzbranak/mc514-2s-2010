@@ -64,7 +64,7 @@ public class PageTableEntry extends IflPageTableEntry
     	}
     	
     	if(pfThread == CallingThread){
-	    	MyOut.print("osp.Memory.PageTableEntry", "%%%%%%%%%%%%%%%%%");
+	    	if(this.getFrame() == null) MyOut.print("osp.Memory.PageTableEntry", "%%%%%%%%%%%%%%%%%");
         	this.getFrame().incrementLockCount();
         	return SUCCESS;
     	}

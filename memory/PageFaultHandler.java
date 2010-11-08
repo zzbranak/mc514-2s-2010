@@ -76,6 +76,7 @@ public class PageFaultHandler extends IflPageFaultHandler
 					 int referenceType,
 					 PageTableEntry page){
     	
+    	PageTableEntry OldPage;
     	boolean flag = false;
         int FTsize = MMU.getFrameTableSize();
         FrameTableEntry FEntry;
@@ -86,8 +87,8 @@ public class PageFaultHandler extends IflPageFaultHandler
         /* Checa se o pedido de tratamento de pagefault é válido, testando se a página mandada
          * tem ou não frame alocado. Caso tenha, o pedido é inválido e retorna false */
         if(page.getFrame() != null){
-        	page.notifyThreads();
         	page.setValidatingThread(null);
+        	page.notifyThreads();
         	ThreadCB.dispatch();
         	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
         	return FAILURE;
@@ -101,71 +102,69 @@ public class PageFaultHandler extends IflPageFaultHandler
         	if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false) flag = true;
         }
         if(flag == false){
-           	page.notifyThreads();
         	page.setValidatingThread(null);
+           	page.notifyThreads();
         	ThreadCB.dispatch();
         	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
         	return NotEnoughMemory;
         }
         
-        
         thread.suspend(pfEvent);
         
         FEntry = FindFreeFrame();
         FEntry.setReserved(page.getTask());
-        
+        if(FEntry.isReserved() == false) MyOut.print("osp.Memory.PFH", "!!!!FALHA NA RESERVA!");
+        OldPage = FEntry.getPage();
         
         if(FEntry.getPage() == null){
-        	MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME SEM DONO: " + FEntry);
-        	FEntry.FreeingFrame();
-	        page.setFrame(FEntry);
+        	page.setFrame(FEntry);
         	SwapIn(page, thread);
-            if(thread.getStatus() == ThreadKill){
-            	FEntry.FreeingFrame();
-            	page.notifyThreads();
+        	if(thread.getStatus() == ThreadKill){
+        		page.setFrame(null);
             	page.setValidatingThread(null);
+               	page.notifyThreads();
             	ThreadCB.dispatch();
-            	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
-            	return FAILURE;       
-            }
-            PageFrameSettings(page, FEntry, referenceType);
+            	return FAILURE;
+        	}
+        	PageFrameSettings(OldPage, page, FEntry, referenceType);
+        	FEntry.setUnreserved(page.getTask());
+        	page.notifyThreads();
+        	pfEvent.notifyThreads();
+        	ThreadCB.dispatch();
+        	return SUCCESS;
         }
+        
         else{
         	if(FEntry.isDirty() == true){
-        		MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME SUJA: " + FEntry);
-        		SwapOut(FEntry.getPage(), thread);
-        		FEntry.setDirty(false);
-                if(thread.getStatus() == ThreadKill){
-                	page.notifyThreads();
+        		SwapOut(OldPage, thread);
+            	if(thread.getStatus() == ThreadKill){
+            		FEntry.setDirty(false);
                 	page.setValidatingThread(null);
+                   	page.notifyThreads();
                 	ThreadCB.dispatch();
-                	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
-                	return FAILURE;       
-                }
-        	
+                	return FAILURE;
+            	}
         	}
-        	MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME LIMPA: " + FEntry);
-        	FEntry.FreeingFrame();
-	        page.setFrame(FEntry);
+    		FEntry.FreeingFrame();
+    		page.setFrame(FEntry);
         	SwapIn(page, thread);
-            if(thread.getStatus() == ThreadKill){
-            	page.setFrame(null);
-            	page.notifyThreads();
+        	if(thread.getStatus() == ThreadKill){
+        		page.setFrame(null);
             	page.setValidatingThread(null);
+               	page.notifyThreads();
             	ThreadCB.dispatch();
-            	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
-            	return FAILURE;       
-            	
-            }
-            PageFrameSettings(page, FEntry, referenceType);
-            
+            	return FAILURE;
+        	}
+        	PageFrameSettings(OldPage, page, FEntry, referenceType);
+        	FEntry.setUnreserved(page.getTask());
+        	page.setValidatingThread(null);
+        	page.notifyThreads();
+        	pfEvent.notifyThreads();
+        	ThreadCB.dispatch();
+        	return SUCCESS;
+        	
         }
-        page.setValidatingThread(null);
-        FEntry.setUnreserved(page.getTask());
-        page.notifyThreads();
-        pfEvent.notifyThreads();
-        ThreadCB.dispatch();
-        return SUCCESS;
+        
 
     }
     
@@ -190,7 +189,14 @@ public class PageFaultHandler extends IflPageFaultHandler
         FrameTableEntry FEntry;
         
         for(int i=0;i<FTsize;i++){
-        	FEntry = MMU.getFrame(i);
+            FEntry = MMU.getFrame(i);
+        	if(FEntry.getPage() == null && FEntry.isReserved() == false && FEntry.getLockCount() == 0 )
+        		return FEntry;
+        	
+        }
+        
+        for(int i=0;i<FTsize;i++){
+        	FEntry = MMU.getFrame(i);       	
         	
         	if(FEntry.isReferenced() == false){
         		if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false){
@@ -204,7 +210,7 @@ public class PageFaultHandler extends IflPageFaultHandler
         }
         for(int i=0;i<FTsize;i++){
             FEntry = MMU.getFrame(i);
-            if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false && FEntry.isReferenced() == true)
+            if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false && FEntry.isReferenced() == false)
             	return FEntry;
         }
         return null;
@@ -224,11 +230,17 @@ public class PageFaultHandler extends IflPageFaultHandler
     	
     }
     
-    public static void PageFrameSettings(PageTableEntry page, FrameTableEntry frame, int Type){
+    public static void PageFrameSettings(PageTableEntry OldPage, PageTableEntry NewPage, FrameTableEntry frame, int Type){
     	
-    	page.setValid(true);
+    	/*if(OldPage != null){
+    	    OldPage.setValid(false);
+    	    OldPage.setFrame(null);
+    	}*/
+    	
+    	NewPage.setValid(true);
+    	
+        frame.setPage(NewPage);       
     	frame.setReferenced(true);
-        frame.setPage(page);
     	
     	if(Type == MemoryRead){
     		frame.setDirty(true);

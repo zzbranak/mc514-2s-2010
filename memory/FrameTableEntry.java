@@ -37,8 +37,7 @@ public class FrameTableEntry extends IflFrameTableEntry
     	if(this.getPage() != null){
         	this.getPage().setValid(false);
         	this.getPage().setFrame(null);
-    	}
-    	
+    	}   	
     	this.setPage(null);
     }
 
