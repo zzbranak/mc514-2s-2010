@@ -45,13 +45,18 @@ public class PageTable extends IflPageTable
     public void do_deallocateMemory()
     {
        TaskCB task;
-    	
-        for(int i=0;i<PTBsize;i++){
-        	this.pages[i].getFrame().setPage(null);
-        	this.pages[i].getFrame().setDirty(false);
-        	this.pages[i].getFrame().setReferenced(false);
-        	task = this.pages[i].getFrame().getReserved();
-        	if(task != null)this.pages[i].getFrame().setUnreserved(task);
+       
+       MyOut.print("osp.Memory.PageTable", "------Tamanho da PageTable: " + PTBsize);
+       
+       for(int i=0;i<PTBsize;i++){
+    	   MyOut.print("osp.Memory.PageTable", "------LOOP: " + i);
+    	   if(this.pages[i].getFrame() != null){
+               this.pages[i].getFrame().setPage(null);
+               this.pages[i].getFrame().setDirty(false);
+               this.pages[i].getFrame().setReferenced(false);
+               task = this.pages[i].getFrame().getReserved();
+               if(task != null)this.pages[i].getFrame().setUnreserved(task);
+    	   }
         }
 
     }

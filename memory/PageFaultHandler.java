@@ -80,10 +80,19 @@ public class PageFaultHandler extends IflPageFaultHandler
         int FTsize = MMU.getFrameTableSize();
         FrameTableEntry FEntry;
         SystemEvent pfEvent = new SystemEvent("PageFault");
+              
+        page.setValidatingThread(thread);
     	
         /* Checa se o pedido de tratamento de pagefault é válido, testando se a página mandada
          * tem ou não frame alocado. Caso tenha, o pedido é inválido e retorna false */
-        if(page.getFrame() != null) return FAILURE;
+        if(page.getFrame() != null){
+        	page.notifyThreads();
+        	page.setValidatingThread(null);
+        	ThreadCB.dispatch();
+        	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
+        	return FAILURE;
+        }
+       
         
         /* Checa se há frames não locked e não reservadas para que possa ocorrer swap-out. Caso
          * não haja nenhum que obedeca as duas regras, devolve memória insuficiente */
@@ -91,25 +100,72 @@ public class PageFaultHandler extends IflPageFaultHandler
         	FEntry = MMU.getFrame(i);
         	if(FEntry.getLockCount() == 0 && FEntry.isReserved() == false) flag = true;
         }
-        if(flag == false) return NotEnoughMemory;
+        if(flag == false){
+           	page.notifyThreads();
+        	page.setValidatingThread(null);
+        	ThreadCB.dispatch();
+        	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
+        	return NotEnoughMemory;
+        }
         
         
         thread.suspend(pfEvent);
         
         FEntry = FindFreeFrame();
-        if(FEntry.getPage() == null){
-        	page.setFrame(FEntry);
-        }
-        else
-        	if(FEntry.isDirty() == false){
-        		FEntry.FreeingFrame();
-        	}
-              
-
-        	
-        if(thread.getStatus() == ThreadKill) return FAILURE;
+        FEntry.setReserved(page.getTask());
         
-        else return SUCCESS;
+        
+        if(FEntry.getPage() == null){
+        	MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME SEM DONO: " + FEntry);
+        	FEntry.FreeingFrame();
+	        page.setFrame(FEntry);
+        	SwapIn(page, thread);
+            if(thread.getStatus() == ThreadKill){
+            	FEntry.FreeingFrame();
+            	page.notifyThreads();
+            	page.setValidatingThread(null);
+            	ThreadCB.dispatch();
+            	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
+            	return FAILURE;       
+            }
+            PageFrameSettings(page, FEntry, referenceType);
+        }
+        else{
+        	if(FEntry.isDirty() == true){
+        		MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME SUJA: " + FEntry);
+        		SwapOut(FEntry.getPage(), thread);
+        		FEntry.setDirty(false);
+                if(thread.getStatus() == ThreadKill){
+                	page.notifyThreads();
+                	page.setValidatingThread(null);
+                	ThreadCB.dispatch();
+                	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
+                	return FAILURE;       
+                }
+        	
+        	}
+        	MyOut.print("osp.Memory.PFH", ">>>>>>>>>>>FRAME LIMPA: " + FEntry);
+        	FEntry.FreeingFrame();
+	        page.setFrame(FEntry);
+        	SwapIn(page, thread);
+            if(thread.getStatus() == ThreadKill){
+            	page.setFrame(null);
+            	page.notifyThreads();
+            	page.setValidatingThread(null);
+            	ThreadCB.dispatch();
+            	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
+            	return FAILURE;       
+            	
+            }
+            PageFrameSettings(page, FEntry, referenceType);
+            
+        }
+        page.setValidatingThread(null);
+        FEntry.setUnreserved(page.getTask());
+        page.notifyThreads();
+        pfEvent.notifyThreads();
+        ThreadCB.dispatch();
+        return SUCCESS;
 
     }
     
@@ -154,18 +210,39 @@ public class PageFaultHandler extends IflPageFaultHandler
         return null;
     }
 
-    public static void SwapOut(PageTableEntry page, ThreadCB OwnThread){
+    public static void SwapOut(PageTableEntry page, ThreadCB thread){
     	
     	OpenFile SwpFile = page.getTask().getSwapFile();
-    	SwpFile.write(page.getID(), page, OwnThread);
+    	SwpFile.write(page.getID(), page, thread);
     	
     }
     
-    public static void SwapIn(PageTableEntry page, ThreadCB OwnThread){
+    public static void SwapIn(PageTableEntry page, ThreadCB thread){
     	
     	OpenFile SwpFile = page.getTask().getSwapFile();
-    	SwpFile.read(page.getID(), page, OwnThread);
+    	SwpFile.read(page.getID(), page, thread);
     	
+    }
+    
+    public static void PageFrameSettings(PageTableEntry page, FrameTableEntry frame, int Type){
+    	
+    	page.setValid(true);
+    	frame.setReferenced(true);
+        frame.setPage(page);
+    	
+    	if(Type == MemoryRead){
+    		frame.setDirty(true);
+    		return; 	
+    	}
+    	if(Type == MemoryWrite){ 
+    		frame.setDirty(false);
+    		return;
+    	}
+    	
+    	if(Type == MemoryLock){ 
+    		frame.setDirty(false);
+    		return;
+    	}
     }
 
 }
