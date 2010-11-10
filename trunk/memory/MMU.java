@@ -1,6 +1,7 @@
 package osp.Memory;
 
 import java.util.*;
+import java.lang.Math;
 import osp.IFLModules.*;
 import osp.Threads.*;
 import osp.Tasks.*;
@@ -17,7 +18,7 @@ import osp.Interrupts.*;
 */
 public class MMU extends IflMMU
 {
-	//private static FrameTableEntry[] frameTable;
+	private static FrameTableEntry[] frameTable;
 	
     /** 
         This method is called once before the simulation starts. 
@@ -30,10 +31,10 @@ public class MMU extends IflMMU
     	
     	/* Cria a FrameTable e associa uma FrameTableEntry a cada entrada. */
     	int frameTableSize = MMU.getFrameTableSize();
-        //MMU.frameTable = new FrameTableEntry[frameTableSize];
+        MMU.frameTable = new FrameTableEntry[frameTableSize];
         
         for(int i=0; i<frameTableSize; i++) {
-        	//MMU.frameTable[i] = new FrameTableEntry(i);
+        	MMU.frameTable[i] = new FrameTableEntry(i);
         	MMU.setFrame(i, new FrameTableEntry(i));
         }
 
@@ -68,51 +69,30 @@ public class MMU extends IflMMU
     	int offsetBits;
     	int PageNum;
     	int PageTot;
+    	//ThreadCB threadAux;
     	PageTable PTb = getPTBR();
     	
     
     	/* Pega a pagina do endereço de memoria. */
+    	int virtualAddressBits = getVirtualAddressBits();
+    	int pageAddressBits = getPageAddressBits();
+    	int offsetBits = virtualAddressBits - pageAddressBits;
+    	int pageSize = Math.pow((int)2, (int)offsetBits);
+    	int pageNum = memoryAddress / pageSize;
     	
-    	for(int i=0;i<VAb;i++) EndMax = EndMax*2;
-    	for(int i=0;i<PAb;i++) PageSize = PageSize*2;
-    	PageTot = EndMax / PageSize;
-    	offsetBits = memoryAddress % PageSize;
-    	PageNum = memoryAddress / PageTot;
-    	MyOut.print("osp.Memory.MMU", "###Endereço de memória: " + memoryAddress);
-    	MyOut.print("osp.Memory.MMU", "###Bits de Endereçamento: " + getVirtualAddressBits());
-    	MyOut.print("osp.Memory.MMU", "###Bits de Pagina: " + getPageAddressBits());
-    	MyOut.print("osp.Memory.MMU", "###Endereço Máximo: " + EndMax);
-    	MyOut.print("osp.Memory.MMU", "###Tamanho da Página: " + PageSize);
-    	MyOut.print("osp.Memory.MMU", "###Total de Páginas: " + PageTot);
-    	MyOut.print("osp.Memory.MMU", "###offset: " + offsetBits);
-    	MyOut.print("osp.Memory.MMU", "###Número da Página referenciada: " + PageNum);
-    	MyOut.print("osp.Memory.MMU", "###Total de páginas da PageTable: " + PTb.PTBsize);
-    	
-    	if(PTb.pages[PageNum].isValid() == true){
-    		if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
-    		PTb.pages[PageNum].getFrame().setReferenced(true);
-    		return PTb.pages[PageNum];
-    	}  	                
-    	else{
-    		if(PTb.pages[PageNum].getValidatingThread() != null){
-    			MyOut.print("osp.Memory.MMU", "$$$$$$$ PÁGINA INVÁLIDA, MAS A CAMINHO");
-    			thread.suspend(PTb.pages[PageNum]);
-    		}
-    		else{
-    			MyOut.print("osp.Memory.MMU", "$$$$$$$ PÁGINA TOTALMENTE INVÁLIDA");
-    			InterruptVector.setInterruptType(PageFault);
-    			InterruptVector.setThread(thread);
-    			InterruptVector.setPage(PTb.pages[PageNum]);
-    			CPU.interrupt(PageFault);
+    	/* Verifica se a pagina eh valida. */
+    	if(thread.getTask().getPageTable().pages[pageNum].isValid()) {
+    		
+    	} else {
+    		if(thread.getTask().getPageTable().pages[pageNum].getValidatingThread == thread) {
     			
+    		} else {
+    			thread.suspend();
     		}
-			if(thread.getStatus() != ThreadKill){
-				if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
-	    		
-	    		PTb.pages[PageNum].getFrame().setReferenced(true);
-			}
-    		return PTb.pages[PageNum];
     	}
+    	
+    	                
+        return null;
 
     }
 
