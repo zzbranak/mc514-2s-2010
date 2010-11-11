@@ -93,9 +93,8 @@ public class PageFaultHandler extends IflPageFaultHandler
         	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
         	return FAILURE;
         }
-       
         
-        /* Checa se há frames não locked e não reservadas para que possa ocorrer swap-out. Caso
+        /* Checa se há frames não locked e não reservadas para que possa ocorrer swap-in. Caso
          * não haja nenhum que obedeca as duas regras, devolve memória insuficiente */
         for(int i=0;i<FTsize;i++){
         	FEntry = MMU.getFrame(i);
@@ -113,16 +112,25 @@ public class PageFaultHandler extends IflPageFaultHandler
         
         FEntry = FindFreeFrame();
         FEntry.setReserved(page.getTask());
+        
+        MyOut.print("osp.Memory.PageFaultHandler", ">>>Identidade da frame: " + FEntry);
+    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Página da Frame: " + FEntry.getPage());
+    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Nova Página: " + FEntry.getPage());
+    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Dirty da Frame: " + FEntry.isDirty());
+    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Referência da Frame: " + FEntry.isReferenced());
+    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Reserva da Frame: " + FEntry.isReserved());
+        
+        
         if(FEntry.isReserved() == false) MyOut.print("osp.Memory.PFH", "!!!!FALHA NA RESERVA!");
         OldPage = FEntry.getPage();
         
         if(FEntry.getPage() == null){
         	page.setFrame(FEntry);
-        	SwapIn(page, thread);
-        	if(thread.getStatus() == ThreadKill){
-        		page.setFrame(null);
+        	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
+        		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
             	page.setValidatingThread(null);
                	page.notifyThreads();
+               	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
             	return FAILURE;
         	}
@@ -136,22 +144,22 @@ public class PageFaultHandler extends IflPageFaultHandler
         
         else{
         	if(FEntry.isDirty() == true){
-        		SwapOut(OldPage, thread);
-            	if(thread.getStatus() == ThreadKill){
-            		FEntry.setDirty(false);
+            	if(SwapOut(OldPage, thread) == FAILURE || thread.getStatus() == ThreadKill){
+            		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
                 	page.setValidatingThread(null);
                    	page.notifyThreads();
+                   	pfEvent.notifyThreads();
                 	ThreadCB.dispatch();
                 	return FAILURE;
             	}
         	}
     		FEntry.FreeingFrame();
     		page.setFrame(FEntry);
-        	SwapIn(page, thread);
-        	if(thread.getStatus() == ThreadKill){
-        		page.setFrame(null);
+        	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
+        		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
             	page.setValidatingThread(null);
                	page.notifyThreads();
+               	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
             	return FAILURE;
         	}
@@ -216,26 +224,26 @@ public class PageFaultHandler extends IflPageFaultHandler
         return null;
     }
 
-    public static void SwapOut(PageTableEntry page, ThreadCB thread){
+    public static int SwapOut(PageTableEntry page, ThreadCB thread){
     	
     	OpenFile SwpFile = page.getTask().getSwapFile();
+    	if(SwpFile == null) return FAILURE;
     	SwpFile.write(page.getID(), page, thread);
+    	return SUCCESS;
     	
     }
     
-    public static void SwapIn(PageTableEntry page, ThreadCB thread){
+    public static int SwapIn(PageTableEntry page, ThreadCB thread){
     	
     	OpenFile SwpFile = page.getTask().getSwapFile();
+    	if(SwpFile == null) return FAILURE;
     	SwpFile.read(page.getID(), page, thread);
+    	return SUCCESS;
     	
     }
     
     public static void PageFrameSettings(PageTableEntry OldPage, PageTableEntry NewPage, FrameTableEntry frame, int Type){
     	
-    	/*if(OldPage != null){
-    	    OldPage.setValid(false);
-    	    OldPage.setFrame(null);
-    	}*/
     	
     	NewPage.setValid(true);
     	

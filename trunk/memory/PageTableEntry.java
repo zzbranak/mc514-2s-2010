@@ -49,11 +49,13 @@ public class PageTableEntry extends IflPageTableEntry
     {
     	ThreadCB CallingThread = iorb.getThread();
     	ThreadCB pfThread = this.getValidatingThread();
-  
+    	TaskCB task = this.getTask();
+    	FrameTableEntry frame = this.getFrame();
+    	
     	if(pfThread == null){
     		if(this.isValid() == false){
-    	    	MyOut.print("osp.Memory.PageTableEntry", "##################");
-            	if(PageFaultHandler.handlePageFault(iorb.getThread(), MemoryLock, this) == SUCCESS){
+    	    	MyOut.print("osp.Memory.PageTableEntry", "[[[[[[[[[[[[[[[[[[[[[[[[");
+            	if(PageFaultHandler.handlePageFault(CallingThread, MemoryLock, this) == SUCCESS){
                 	this.getFrame().incrementLockCount();
                 	return SUCCESS;
             	}
@@ -64,14 +66,13 @@ public class PageTableEntry extends IflPageTableEntry
     	}
     	
     	if(pfThread == CallingThread){
-	    	if(this.getFrame() == null) MyOut.print("osp.Memory.PageTableEntry", "%%%%%%%%%%%%%%%%%");
-        	this.getFrame().incrementLockCount();
+    		this.getFrame().incrementLockCount();
         	return SUCCESS;
     	}
 
     	CallingThread.suspend(this);
     	if(CallingThread.getStatus() != ThreadKill && this.isValid()){
-        	this.getFrame().incrementLockCount();
+    		this.getFrame().incrementLockCount();
         	return SUCCESS;
     	}
     	return FAILURE;
