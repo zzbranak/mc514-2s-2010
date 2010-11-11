@@ -1,3 +1,19 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status:Completado
+*
+* 11/11/2010
+* 1. Método Do_lock MUITO mal explicado no manual e inclusive há erros no comentário do método
+* 2.
+* 3.
+*
+* */
+
+
+
 package osp.Memory;
 import java.util.*;
 import osp.Hardware.*;
@@ -120,11 +136,10 @@ public class PageFaultHandler extends IflPageFaultHandler
     	MyOut.print("osp.Memory.PageFaultHandler", ">>>Referência da Frame: " + FEntry.isReferenced());
     	MyOut.print("osp.Memory.PageFaultHandler", ">>>Reserva da Frame: " + FEntry.isReserved());
         
-        
-        if(FEntry.isReserved() == false) MyOut.print("osp.Memory.PFH", "!!!!FALHA NA RESERVA!");
+    	
         OldPage = FEntry.getPage();
         
-        if(FEntry.getPage() == null){
+        if(OldPage == null){
         	page.setFrame(FEntry);
         	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
         		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
@@ -251,11 +266,11 @@ public class PageFaultHandler extends IflPageFaultHandler
     	frame.setReferenced(true);
     	
     	if(Type == MemoryRead){
-    		frame.setDirty(true);
+    		frame.setDirty(false);
     		return; 	
     	}
     	if(Type == MemoryWrite){ 
-    		frame.setDirty(false);
+    		frame.setDirty(true);
     		return;
     	}
     	

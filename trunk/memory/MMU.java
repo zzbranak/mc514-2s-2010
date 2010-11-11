@@ -1,5 +1,18 @@
-package osp.Memory;
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status:Completado
+*
+* 11/11/2010
+* 1. Método Do_lock MUITO mal explicado no manual e inclusive há erros no comentário do método
+* 2.
+* 3.
+*
+* */
 
+package osp.Memory;
 import java.util.*;
 import osp.IFLModules.*;
 import osp.Threads.*;
@@ -90,7 +103,7 @@ public class MMU extends IflMMU
     	
     	if(PTb.pages[PageNum].isValid() == true){
     		if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
-    		if(PTb.pages[PageNum].getFrame().isReferenced() == false )PTb.pages[PageNum].getFrame().setReferenced(true);
+    		PTb.pages[PageNum].getFrame().setReferenced(true);
     		return PTb.pages[PageNum];
     	}  	                
     	else{
