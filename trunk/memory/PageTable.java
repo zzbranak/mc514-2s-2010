@@ -44,9 +44,14 @@ public class PageTable extends IflPageTable
     */
     public void do_deallocateMemory()
     {
-       TaskCB task;
-       
-       MyOut.print("osp.Memory.PageTable", "------Tamanho da PageTable: " + PTBsize);
+       TaskCB task = this.getTask();
+       int FTBsize = MMU.getFrameTableSize();
+       FrameTableEntry frame;
+             
+       for(int i=0;i<FTBsize;i++){
+    	   frame = MMU.getFrame(i);
+    	   if(frame.getReserved() == task) frame.setUnreserved(task);
+       }
        
        for(int i=0;i<PTBsize;i++){
     	   MyOut.print("osp.Memory.PageTable", "------LOOP: " + i);
