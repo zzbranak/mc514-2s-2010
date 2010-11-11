@@ -54,8 +54,6 @@ public class PageTable extends IflPageTable
                this.pages[i].getFrame().setPage(null);
                this.pages[i].getFrame().setDirty(false);
                this.pages[i].getFrame().setReferenced(false);
-               task = this.pages[i].getFrame().getReserved();
-               if(task != null)this.pages[i].getFrame().setUnreserved(task);
     	   }
         }
 
