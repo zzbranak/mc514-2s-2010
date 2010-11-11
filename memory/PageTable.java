@@ -1,3 +1,17 @@
+/*
+* Grupo 06
+* RA: 093311
+* RA: 090995
+*
+* Status:Completado
+*
+* 11/11/2010
+* 1. Método Do_lock MUITO mal explicado no manual e inclusive há erros no comentário do método
+* 2.
+* 3.
+*
+* */
+
 package osp.Memory;
 /**
     The PageTable class represents the page table for a given task.
