@@ -128,21 +128,12 @@ public class PageFaultHandler extends IflPageFaultHandler
         
         FEntry = FindFreeFrame();
         FEntry.setReserved(page.getTask());
-        
-        MyOut.print("osp.Memory.PageFaultHandler", ">>>Identidade da frame: " + FEntry);
-    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Página da Frame: " + FEntry.getPage());
-    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Nova Página: " + FEntry.getPage());
-    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Dirty da Frame: " + FEntry.isDirty());
-    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Referência da Frame: " + FEntry.isReferenced());
-    	MyOut.print("osp.Memory.PageFaultHandler", ">>>Reserva da Frame: " + FEntry.isReserved());
-        
     	
         OldPage = FEntry.getPage();
         
         if(OldPage == null){
         	page.setFrame(FEntry);
         	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
-        		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
             	page.setValidatingThread(null);
                	page.notifyThreads();
                	pfEvent.notifyThreads();
@@ -160,7 +151,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         else{
         	if(FEntry.isDirty() == true){
             	if(SwapOut(OldPage, thread) == FAILURE || thread.getStatus() == ThreadKill){
-            		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
                 	page.setValidatingThread(null);
                    	page.notifyThreads();
                    	pfEvent.notifyThreads();
@@ -171,7 +161,6 @@ public class PageFaultHandler extends IflPageFaultHandler
     		FEntry.FreeingFrame();
     		page.setFrame(FEntry);
         	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
-        		MyOut.print("osp.Memory.PFH", "NOVA PÁG / VEL PÁG / FRAME" + page + " / " + OldPage + " / "+ FEntry);
             	page.setValidatingThread(null);
                	page.notifyThreads();
                	pfEvent.notifyThreads();
