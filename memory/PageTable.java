@@ -68,7 +68,6 @@ public class PageTable extends IflPageTable
        }
        
        for(int i=0;i<PTBsize;i++){
-    	   MyOut.print("osp.Memory.PageTable", "------LOOP: " + i);
     	   if(this.pages[i].getFrame() != null){
                this.pages[i].getFrame().setPage(null);
                this.pages[i].getFrame().setDirty(false);

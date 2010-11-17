@@ -106,7 +106,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         	page.setValidatingThread(null);
         	page.notifyThreads();
         	ThreadCB.dispatch();
-        	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
         	return FAILURE;
         }
         
@@ -120,7 +119,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         	page.setValidatingThread(null);
            	page.notifyThreads();
         	ThreadCB.dispatch();
-        	MyOut.print("osp.Memory.PFH", "RETORNA FAILURE");
         	return NotEnoughMemory;
         }
         
