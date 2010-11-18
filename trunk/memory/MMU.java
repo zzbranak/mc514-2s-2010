@@ -13,6 +13,7 @@
 * */
 
 package osp.Memory;
+import java.lang.Math;
 import java.util.*;
 import osp.IFLModules.*;
 import osp.Threads.*;
@@ -85,7 +86,9 @@ public class MMU extends IflMMU
     	/* Pega a pagina do endereço de memoria. */
     	
     	for(int i=0;i<VAb;i++) EndMax = EndMax*2;
+    	//EndMax = Math.pow((int)2, (int)VAb);
     	for(int i=0;i<PAb;i++) PageSize = PageSize*2;
+    	//PageSize = Math.pow((int)2, (int)PAb);
     	PageTot = EndMax / PageSize;
     	offsetBits = memoryAddress % PageSize;
     	PageNum = memoryAddress / PageTot;
