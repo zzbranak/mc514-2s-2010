@@ -97,15 +97,23 @@ public class PageFaultHandler extends IflPageFaultHandler
         int FTsize = MMU.getFrameTableSize();
         FrameTableEntry FEntry;
         SystemEvent pfEvent = new SystemEvent("PageFault");
-              
+        
+        if(page.getValidatingThread() != null){
+        	thread.suspend(page);
+        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 1");
+        	return SUCCESS;
+        }
+        
+        
         page.setValidatingThread(thread);
     	
         /* Checa se o pedido de tratamento de pagefault é válido, testando se a página mandada
          * tem ou não frame alocado. Caso tenha, o pedido é inválido e retorna false */
-        if(page.getFrame() != null){
+        if(page.isValid() == true && page.getFrame() != null){
         	page.setValidatingThread(null);
         	page.notifyThreads();
         	ThreadCB.dispatch();
+        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 2");
         	return FAILURE;
         }
         
@@ -119,6 +127,7 @@ public class PageFaultHandler extends IflPageFaultHandler
         	page.setValidatingThread(null);
            	page.notifyThreads();
         	ThreadCB.dispatch();
+        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 3");
         	return NotEnoughMemory;
         }
         
@@ -131,49 +140,50 @@ public class PageFaultHandler extends IflPageFaultHandler
         
         if(OldPage == null){
         	page.setFrame(FEntry);
-        	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
+        	SwapIn(page, thread);
+        	if(thread.getStatus() == ThreadKill){
             	page.setValidatingThread(null);
                	page.notifyThreads();
                	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
+            	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 4");
             	return FAILURE;
         	}
-        	PageFrameSettings(OldPage, page, FEntry, referenceType);
-        	FEntry.setUnreserved(page.getTask());
-        	page.notifyThreads();
-        	pfEvent.notifyThreads();
-        	ThreadCB.dispatch();
-        	return SUCCESS;
         }
         
         else{
         	if(FEntry.isDirty() == true){
-            	if(SwapOut(OldPage, thread) == FAILURE || thread.getStatus() == ThreadKill){
+        		SwapOut(OldPage, thread);
+            	if(thread.getStatus() == ThreadKill){
                 	page.setValidatingThread(null);
                    	page.notifyThreads();
                    	pfEvent.notifyThreads();
                 	ThreadCB.dispatch();
+                	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 5");
                 	return FAILURE;
             	}
         	}
     		FEntry.FreeingFrame();
     		page.setFrame(FEntry);
-        	if(SwapIn(page, thread) == FAILURE || thread.getStatus() == ThreadKill){
+    		SwapIn(page, thread);
+        	if(thread.getStatus() == ThreadKill){
             	page.setValidatingThread(null);
                	page.notifyThreads();
                	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
+            	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 6");
             	return FAILURE;
         	}
-        	PageFrameSettings(OldPage, page, FEntry, referenceType);
-        	FEntry.setUnreserved(page.getTask());
-        	page.setValidatingThread(null);
-        	page.notifyThreads();
-        	pfEvent.notifyThreads();
-        	ThreadCB.dispatch();
-        	return SUCCESS;
         	
         }
+    	PageFrameSettings(OldPage, page, FEntry, referenceType);
+    	FEntry.setUnreserved(page.getTask());
+    	page.setValidatingThread(null);
+    	page.notifyThreads();
+    	pfEvent.notifyThreads();
+    	ThreadCB.dispatch();
+    	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 7");
+    	return SUCCESS;
         
 
     }
