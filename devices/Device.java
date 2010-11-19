@@ -31,8 +31,8 @@ public class Device extends IflDevice
     */
     public Device(int id, int numberOfBlocks)
     {
-       
-       	super(id,numberOfBlocks);
+    	super(id,numberOfBlocks);
+    	iorbQueue = new GenericList();
 
     }
 
@@ -67,7 +67,26 @@ public class Device extends IflDevice
     */
     public int do_enqueueIORB(IORB iorb)
     {
-        // your code goes here
+        PageTableEntry IORBpage = iorb.getPage();
+        OpenFile IORBfile = iorb.getOpenFile();
+        int DeviceId = iorb.getDeviceID();
+        
+        int BlockNumber = iorb.getBlockNumber();
+        int BlockSize;
+        int SectorsPerBlock;
+        int SectorSize = ((Disk)this).getBytesPerSector() * 8;
+        int PAb = MMU.getPageAddressBits();
+        
+        for(int i=0;i<PAb;i++) BlockSize = BlockSize*2; //Tamanho do bloco é o mesmo que o da página. Cálculo igual.
+        
+        SectorsPerBlock = BlockSize / SectorSize;
+        
+        IORBpage.lock(iorb);
+        IORBfile.incrementIORBCount();
+        
+        iorb.setCylinder
+        
+        return 0;
 
     }
 
