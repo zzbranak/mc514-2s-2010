@@ -42,7 +42,60 @@ public class DiskInterruptHandler extends IflDiskInterruptHandler
     */
     public void do_handleInterrupt()
     {
-        // your code goes here
+    
+    	IORB iorb = (IORB)InterruptVector.getEvent();
+    	IORB newIORB;
+    	ThreadCB thread = iorb.getThread();
+    	PageTableEntry page = iorb.getPage();
+    	OpenFile file = iorb.getOpenFile();
+    	int deviceID  = iorb.getDeviceID();
+    	int ioType = iorb.getIOType();
+    	TaskCB task = thread.getTask();
+    	FrameTableEntry frame = page.getFrame();
+    	Device device;
+
+        file.decrementIORBCount();
+        
+        if(file.getIORBCount() == 0 && file.closePending) {
+        	file.close();
+        }
+        
+        page.unlock();
+        
+    	/* Verifica se eh uma operacao de swap-in ou swap-out */
+    	if(deviceID != SwapDeviceID) {
+    		if(task.getStatus() != TaskTerm) {
+    			if(thread.getStatus() != ThreadKill) {
+    				frame.setReferenced(true);
+    				if(ioType == FileRead) {
+    					frame.setDirty(true);
+    				}
+    			}
+    		}
+    	} else {
+    		/* Verifica se a task que possui o IORB esta viva */
+    		if(task.getStatus() != TaskTerm) {
+    			frame.setDirty(false);
+    		}
+    	}
+        
+        if(task.getStatus() == TaskTerm){
+        	if(frame.getReserved() == task) {
+        		frame.setUnreserved(task);
+        	}
+        }
+        
+        iorb.notifyThreads();
+        
+        device = Device.get(deviceID);
+        device.setBusy(false);
+        
+        newIORB = device.dequeueIORB();
+        if(newIORB != null) {
+        	device.startIO(newIORB);
+        }
+        
+        ThreadCB.dispatch();
 
     }
 

@@ -31,7 +31,8 @@ public class Device extends IflDevice
     */
     public Device(int id, int numberOfBlocks)
     {
-        // your code goes here
+       
+       	super(id,numberOfBlocks);
 
     }
 
