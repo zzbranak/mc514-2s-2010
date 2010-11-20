@@ -56,6 +56,8 @@ public class DiskInterruptHandler extends IflDiskInterruptHandler
 
         file.decrementIORBCount();
         
+        MyOut.print("OSP.Devices.DiskInterruptHandler", "$$$$$$$$$$   InterruptHandler");
+        
         if(file.getIORBCount() == 0 && file.closePending) {
         	file.close();
         }

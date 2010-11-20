@@ -71,22 +71,58 @@ public class Device extends IflDevice
         OpenFile IORBfile = iorb.getOpenFile();
         int DeviceId = iorb.getDeviceID();
         
-        int BlockNumber = iorb.getBlockNumber();
-        int BlockSize;
+        int CylinderN;
+        int TrackN;
+        int TracksPerCylinder = ((Disk)this).getPlatters();
+        int BlocksPerTrack;
+        int BlockN = iorb.getBlockNumber();
+        int BlockSize = 1;
         int SectorsPerBlock;
-        int SectorSize = ((Disk)this).getBytesPerSector() * 8;
-        int PAb = MMU.getPageAddressBits();
-        
-        for(int i=0;i<PAb;i++) BlockSize = BlockSize*2; //Tamanho do bloco é o mesmo que o da página. Cálculo igual.
-        
-        SectorsPerBlock = BlockSize / SectorSize;
+        int SectorSize = ((Disk)this).getBytesPerSector();
+        int PAb = MMU.getVirtualAddressBits() - MMU.getPageAddressBits();
         
         IORBpage.lock(iorb);
         IORBfile.incrementIORBCount();
         
-        iorb.setCylinder
         
-        return 0;
+        for(int i=0;i<PAb;i++) BlockSize = BlockSize*2; //Tamanho do bloco é o mesmo que o da página. Cálculo igual.
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Tamanho do Bloco: " + BlockSize);
+        SectorsPerBlock = BlockSize / SectorSize;
+        BlocksPerTrack = ((Disk)this).getSectorsPerTrack() / SectorsPerBlock;
+        TrackN = BlockN / BlocksPerTrack;
+        CylinderN = (TrackN / TracksPerCylinder);    
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Page Address Bits " + PAb);
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Tamanho do Bloco: " + BlockSize);
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Numero do Bloco: " + BlockN);
+        MyOut.print("OSP.Devices.Device", "-------------------------------------------");
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Setores por Bloco " + SectorsPerBlock);
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Bytes por Setor: " + ((Disk)this).getBytesPerSector());
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Tamanho do Setor: " + SectorSize);
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Setores por trilha: " + ((Disk)this).getSectorsPerTrack());
+        MyOut.print("OSP.Devices.Device", "-------------------------------------------");
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Trilhas por Cilindro: " + TracksPerCylinder);
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Numero da Trilha: " + TrackN);
+        MyOut.print("OSP.Devices.Device", "-------------------------------------------");      
+        MyOut.print("OSP.Devices.Device", ">>>>>>>> Numero do Cilindro: " + CylinderN);
+        
+        
+        iorb.setCylinder(CylinderN);
+        
+        if(iorb.getThread().getStatus() == ThreadKill){
+        	IORBfile.decrementIORBCount();
+        	return FAILURE;
+        
+        }
+        
+        if(this.isBusy() == true){
+        	((GenericList)iorbQueue).append(iorb);
+        	return SUCCESS;
+        	
+        }
+        
+        this.startIO(iorb);
+        return SUCCESS;
+        
 
     }
 
@@ -98,7 +134,9 @@ public class Device extends IflDevice
     */
     public IORB do_dequeueIORB()
     {
-        // your code goes here
+        IORB retIorb = (IORB)((GenericList)iorbQueue).removeHead();
+        
+        return retIorb;
 
     }
 
@@ -117,7 +155,26 @@ public class Device extends IflDevice
     */
     public void do_cancelPendingIO(ThreadCB thread)
     {
-        // your code goes here
+        Enumeration enumIorb = ((GenericList)iorbQueue).forwardIterator();
+        IORB iorb;
+        
+        
+        while(enumIorb.hasMoreElements()){
+        	iorb = (IORB)enumIorb.nextElement();
+        	
+        	if(iorb.getThread().getID() == thread.getID()){
+        		((GenericList)iorbQueue).remove(iorb);
+        		iorb.getPage().unlock();
+        		iorb.getOpenFile().decrementIORBCount();
+        		
+        		if(iorb.getOpenFile().getIORBCount() == 0 && iorb.getOpenFile().closePending == true)
+        			iorb.getOpenFile().close();
+        		
+        	}
+        	
+        }
+        
+        
 
     }
 
