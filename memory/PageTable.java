@@ -62,11 +62,13 @@ public class PageTable extends IflPageTable
        int FTBsize = MMU.getFrameTableSize();
        FrameTableEntry frame;
              
+       /* Desreserva todas as frames de um processo. */
        for(int i=0;i<FTBsize;i++){
     	   frame = MMU.getFrame(i);
     	   if(frame.getReserved() == task) frame.setUnreserved(task);
        }
        
+       /* Tira a referencia e os bits de controle. */
        for(int i=0;i<PTBsize;i++){
     	   if(this.pages[i].getFrame() != null){
                this.pages[i].getFrame().setPage(null);

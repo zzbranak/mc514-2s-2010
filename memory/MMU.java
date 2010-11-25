@@ -93,6 +93,13 @@ public class MMU extends IflMMU
     	offsetBits = memoryAddress % PageSize;
     	PageNum = memoryAddress / PageTot;
     	
+    	/* Verifica se a pagina eh valida.  
+    	   Se for valida, seta os bits de dirty e referenced e retorna a pagina.
+    	   Senao, verifica se a pagina ja foi requisitada anteriormente e esta 
+    	   chegando a memoria.
+    	   Se a pagina ja foi requisitada anteriormente, suspende a thread.
+    	   Senao, da um page fault.
+       */
     	if(PTb.pages[PageNum].isValid() == true){
     		if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
     		PTb.pages[PageNum].getFrame().setReferenced(true);
@@ -109,6 +116,7 @@ public class MMU extends IflMMU
     			CPU.interrupt(PageFault);
     			
     		}
+    		/* Verifica se a thread ainda esta viva e seta o bit de dirty. */
 			if(thread.getStatus() != ThreadKill){
 				if(referenceType == MemoryWrite )PTb.pages[PageNum].getFrame().setDirty(true);
 	    		
