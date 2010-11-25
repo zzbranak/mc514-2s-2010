@@ -100,7 +100,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         
         if(page.getValidatingThread() != null){
         	thread.suspend(page);
-        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 1");
         	return SUCCESS;
         }
         
@@ -113,7 +112,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         	page.setValidatingThread(null);
         	page.notifyThreads();
         	ThreadCB.dispatch();
-        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 2");
         	return FAILURE;
         }
         
@@ -127,7 +125,6 @@ public class PageFaultHandler extends IflPageFaultHandler
         	page.setValidatingThread(null);
            	page.notifyThreads();
         	ThreadCB.dispatch();
-        	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 3");
         	return NotEnoughMemory;
         }
         
@@ -146,7 +143,6 @@ public class PageFaultHandler extends IflPageFaultHandler
                	page.notifyThreads();
                	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
-            	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 4");
             	return FAILURE;
         	}
         }
@@ -159,7 +155,6 @@ public class PageFaultHandler extends IflPageFaultHandler
                    	page.notifyThreads();
                    	pfEvent.notifyThreads();
                 	ThreadCB.dispatch();
-                	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 5");
                 	return FAILURE;
             	}
         	}
@@ -171,7 +166,6 @@ public class PageFaultHandler extends IflPageFaultHandler
                	page.notifyThreads();
                	pfEvent.notifyThreads();
             	ThreadCB.dispatch();
-            	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 6");
             	return FAILURE;
         	}
         	
@@ -182,7 +176,6 @@ public class PageFaultHandler extends IflPageFaultHandler
     	page.notifyThreads();
     	pfEvent.notifyThreads();
     	ThreadCB.dispatch();
-    	MyOut.print("OSP.MEmory.PageFaultHandler", ">>>>>Return from point 7");
     	return SUCCESS;
         
 
